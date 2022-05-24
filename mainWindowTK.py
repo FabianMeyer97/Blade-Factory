@@ -6,8 +6,6 @@ Main Window
 from tkinter import *
 import main_do
 import threading as th
-import numpy as np
-
 window = Tk()
 
 window.title("BladeFactory")
@@ -51,8 +49,10 @@ txtTemp.grid(column=1, row=0)
 
 print("do_once()")
 global q, start, slicer, oldslice, plus
-q, start, slicer, oldslice, plus = main_do.do_once()
+q, start, plus = main_do.do_once()
+global starttime
 starttime = None
+#q = -1
 
 def update():
     
@@ -60,22 +60,23 @@ def update():
     #global u_ges, alpha_ges
     if do_continue == True:
         print("do_process()")
-        q, slicer, oldslice, plus, starttime = main_do.do_process(q, start, slicer, oldslice, plus, starttime)
+        q, plus, starttime = main_do.do_process(q, start, plus, starttime)
         print("finished")
         
-        lblTime.configure(text= main_do.get_clock(slicer))
-        lblTmax.configure(text= "T_max: "+main_do.get_T_max(slicer) )
-        lblamax.configure(text= "a_max: "+main_do.get_a_max(slicer) )
-        lblamin.configure(text= "a_min: "+main_do.get_a_min(slicer) )
-        lblPlus.configure(text= main_do.get_wenn_plus(slicer) )
-        lblMinus.configure(text= main_do.get_wenn_minus(slicer) )
+        #global str_clock, str_T_max, str_a_max, str_a_min, str_wenn_plus, str_wenn_minus
+        lblTime.configure(text= main_do.get_clock())
+        lblTmax.configure(text= "T_max: "+main_do.get_T_max() )
+        lblamax.configure(text= "a_max: "+main_do.get_a_max() )
+        lblamin.configure(text= "a_min: "+main_do.get_a_min() )
+        lblPlus.configure(text= main_do.get_wenn_plus() )
+        lblMinus.configure(text= main_do.get_wenn_minus() )
         
         T = th.Timer(1.0, update)
         T.start()
         print("go on")
         
     else:
-        main_do.end_process(slicer)
+        main_do.end_process()
         print("stopped")
 
 T = th.Timer(1.0, update)

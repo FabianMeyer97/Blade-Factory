@@ -12,6 +12,9 @@ import keyboard
 #import tkinter as tk
 import datetime
 
+global slicer, oldslice
+global str_clock, str_T_max, str_a_max, str_a_min, str_wenn_plus, str_wenn_minus
+
 h = 0.013 #[m]
 dy = 0.001#[m]
 dt = 1
@@ -38,40 +41,60 @@ np.array(documentation)
 #     lab.config(text=current_time)
 #     #lab['text'] = current_time 
 #     root.after(1000, update_clock) 
-def get_clock(slicer):
-    # get current time as text
-    #current_time = datetime.datetime.now().strftime("Time: %H:%M:%S")
-    #return current_time
-    return "Verstrichende Zeit in Sekunden: " + str(slicer)
+def set_clock():
+    global str_clock
+    str_clock = "Verstrichende Zeit in Sekunden: " + str(slicer)
+    
+def get_clock():
+    global str_clock
+    return str_clock
 
-def get_T_max(slicer):
+def set_T_max():
     global u_ges
-    return str(np.amax(u_ges[slicer:])-273.15) 
+    global str_T_max
+    str_T_max = str(np.amax(u_ges[slicer:])-273.15) 
 
-def get_a_max(slicer):
+def get_T_max():
+    global str_T_max
+    return str_T_max
+
+def set_a_max():
     global alpha_ges
-    return str(np.amax(alpha_ges[slicer]))
+    global str_a_max
+    str_a_max = str(np.amax(alpha_ges[slicer]))
 
-def get_a_min(slicer):
+def get_a_max():
+    global str_a_max
+    return str_a_max
+
+def set_a_min():
     global alpha_ges
-    return str(np.amin(alpha_ges[slicer]))
+    global str_a_min
+    str_a_min = str(np.amin(alpha_ges[slicer]))
 
-def get_wenn_plus(slicer):
-    global plus, u_ges_PLUS, stepsprorechnung
-    result = np.where(u_ges_PLUS == np.amax(u_ges_PLUS[:stepsprorechnung]))
-    return "wenn + "+str(int(plus))+ "°C: " + str(np.amax(u_ges_PLUS[:stepsprorechnung])-273.15) + " °C nach " + str(result[0]) + " Sekunden, bei " + str(result[1]) + " mm."
+def get_a_min():
+    global str_a_min
+    return str_a_min
 
-def get_wenn_minus(slicer):
-    global plus, u_ges_MINUS, stepsprorechnung
-    result = np.where(u_ges_PLUS == np.amax(u_ges_PLUS[:stepsprorechnung]))
-    return "wenn - "+str(int(plus))+ "°C: " + str(np.amax(u_ges_MINUS[:stepsprorechnung])-273.15) + " °C nach " + str(result[0]) + " Sekunden, bei " + str(result[1]) + " mm."
+def set_wenn_plus():
+    global plus, u_ges_PLUS, slicer
+    global str_wenn_plus
+    result = np.where(u_ges_PLUS == np.amax(u_ges_PLUS[slicer:]))
+    str_wenn_plus = "wenn + "+str(int(plus))+ "°C: " + str(np.amax(u_ges_PLUS[slicer:])-273.15) + " °C nach " + str(result[0]) + " Sekunden, bei " + str(result[1]) + " mm."
 
-# --- main ---
-#root = tk.Tk()
-#lab = tk.Label(root)
-#lab.pack()
-# update_clock()
+def get_wenn_plus():
+    global str_wenn_plus
+    return str_wenn_plus
 
+def set_wenn_minus():
+    global plus, u_ges_MINUS, slicer
+    global str_wenn_minus
+    result = np.where(u_ges_MINUS == np.amax(u_ges_MINUS[slicer:]))
+    str_wenn_minus = "wenn - "+str(int(plus))+ "°C: " + str(np.amax(u_ges_MINUS[slicer:])-273.15) + " °C nach " + str(result[0]) + " Sekunden, bei " + str(result[1]) + " mm."
+
+def get_wenn_minus():
+    global str_wenn_minus
+    return str_wenn_minus
 
 """
 while True:
@@ -92,6 +115,7 @@ def do_once():
     global plus#, slicer, oldslice, q
     global nsteps, dy, dt, dy2, ny, boundary1, boundary2, eingegeben1, stepsprorechnung
     global documentation
+    global slicer, oldslice
     eingegeben1 = e.getTemperature(10)   
     documentation.append((0,eingegeben1))
     start = time.time()
@@ -109,62 +133,29 @@ def do_once():
     slicer = 0
     oldslice = 0
     q = -1
-    return q, start, slicer, oldslice, plus
+    return q, start, plus
     
 #while True:  
-def do_process(q, start, slicer, oldslice, plus, starttime):
+def do_process(q, start, plus, starttime):
     global u_ges, alpha_ges, dadt_ges, u, u0
     global u_ges_PLUS, alpha_ges_PLUS, dadt_ges_PLUS, u_PLUS, u0_PLUS 
     global u_ges_MINUS, alpha_ges_MINUS, dadt_ges_MINUS, u_MINUS, u0_MINUS
     #global plus#, slicer, oldslice, q
     global nsteps, dy, dt, dy2, ny, boundary1, boundary2, eingegeben1, stepsprorechnung
     global documentation
+    global slicer, oldslice
     q += 1  
+    
+    eingegeben = e.getTemperature(10)
+    endtime = time.time()
+    
     if q == 0:
-        """
-        while True:
-            try:     
-                eingegeben = int(input("Aktuelle Heizplattentemp in °C: "))+273.15
-                #eingegeben1 = e.getTemperature(10)
-            except ValueError:
-                print("Keine Integer-Zahl eingegeben")
-            else:
-                if (eingegeben > 0+273.15 and eingegeben < 150+273.15):
-                    break   
-                print("Wert zu hoch oder zu gering!")
-        """
-        eingegeben = e.getTemperature(10)
-        end = time.time()
-        dif1 = int(end-start)
+        dif1 = int(endtime-start)
         #dif1 = int(input("Slicer"))
         print("Verstrichende Zeit in Sekunden: " + str(dif1))
-        documentation.append((dif1, eingegeben))
         slicer += dif1 
-        starttime = time.time()
-        u_ges, alpha_ges, dadt_ges, u, u0 = reg.regelung2(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben, slicer, stepsprorechnung, oldslice)
-        u_ges_PLUS, alpha_ges_PLUS, dadt_ges_PLUS, u_PLUS, u0_PLUS = reg.regelung2_PLUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben,slicer, stepsprorechnung, oldslice, plus)
-        u_ges_MINUS, alpha_ges_MINUS, dadt_ges_MINUS, u_MINUS, u0_MINUS = reg.regelung2_MINUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben,slicer, stepsprorechnung, oldslice, plus)
-        plus = (maxerlaubteTemperatur - np.amax(u_ges))/2
-        if plus < 0:
-            plus = 0
-
-        #write.animatePlot(u_ges[:stepsprorechnung+slicer], stepsprorechnung+slicer)
-        
     else: 
-        """
-        while True:
-            try:     
-                eingegeben = int(input("Aktuelle Heizplattentemp in °C: "))+273.15
-                #eingegeben1 = e.getTemperature(10)
-            except ValueError:
-                print("Keine Integer-Zahl eingegeben")
-            else:
-                if eingegeben == 999+273.15 or eingegeben == 555+273.15 or (eingegeben > 0+273.15 and eingegeben < 150+273.15):
-                    break   
-                print("Wert zu hoch oder zu gering!")
-                
-        if eingegeben == 999+273.15:
-            break
+        """                
         if eingegeben == 555+273.15:            
              w.switchH = not w.switchH
         """
@@ -175,32 +166,35 @@ def do_process(q, start, slicer, oldslice, plus, starttime):
         if w.switchH == True:
             print("FLIEß IST ABGELEGT \n p oder f drücken um Fließ zu entfernen!")   
         """    
-        eingegeben = e.getTemperature(10)      
-        endtime = time.time()
         oldslice = slicer
         slicer += int(endtime-starttime)
         #slicer = int(input("Slicer"))
         print("Verstrichende Zeit in Sekunden: " + str(slicer))
-        documentation.append((slicer, eingegeben))
-        starttime = time.time()
-        u_ges, alpha_ges, dadt_ges, u, u0 = reg.regelung2(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben, slicer, stepsprorechnung, oldslice)
-        print(11)
-        u_ges_PLUS, alpha_ges_PLUS, dadt_ges_PLUS, u_PLUS, u0_PLUS = reg.regelung2_PLUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben,slicer, stepsprorechnung, oldslice, plus)
-        print(22)
-        u_ges_MINUS, alpha_ges_MINUS, dadt_ges_MINUS, u_MINUS, u0_MINUS = reg.regelung2_MINUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben,slicer, stepsprorechnung, oldslice, plus)
-        print(33)
-        plus = (maxerlaubteTemperatur - np.amax(u_ges))/2
-        if plus < 0:
-            plus = 0
-        print(plus)
-        #write.animatePlot(u_ges[:stepsprorechnung+slicer], stepsprorechnung+slicer)    
         
-    return q, slicer, oldslice, plus, starttime
+    documentation.append((slicer, eingegeben))    
+    starttime = time.time()
+    u_ges, alpha_ges, dadt_ges, u, u0 = reg.regelung2(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben, slicer, stepsprorechnung, oldslice)
+    set_a_max()
+    set_a_min()
+    u_ges_PLUS, alpha_ges_PLUS, dadt_ges_PLUS, u_PLUS, u0_PLUS = reg.regelung2_PLUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben,slicer, stepsprorechnung, oldslice, plus)
+    set_wenn_plus()
+    u_ges_MINUS, alpha_ges_MINUS, dadt_ges_MINUS, u_MINUS, u0_MINUS = reg.regelung2_MINUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben,slicer, stepsprorechnung, oldslice, plus)
+    set_clock()
+    set_T_max()
+    set_wenn_minus()
+    plus = (maxerlaubteTemperatur - np.amax(u_ges))/2
+    if plus < 0:
+        plus = 0
+    print(plus)
+    #write.animatePlot(u_ges[:stepsprorechnung+slicer], stepsprorechnung+slicer)    
+        
+    return q, plus, starttime
 #root.mainloop()            
 #write.plot_heatmap2(stepsprorechnung+slicer, dt, u_ges[:stepsprorechnung+slicer])
 
-def end_process(slicer):
+def end_process():
     global documentation, stepsprorechnung
+    global slicer
     np.savetxt("documentation.csv", documentation)
     write.save(u_ges[:stepsprorechnung+slicer], alpha_ges[:stepsprorechnung+slicer], dadt_ges[:stepsprorechnung+slicer])
     print(documentation)
