@@ -8,7 +8,7 @@
 
 ## ToDo
 
-[ ] GUI erstellen
-[ ] Kalibrierung für Balsaholz
-[ ] Funktionalität für PVC-Schaum
-[ ] Unterstützung mehrerer Heizplatten (dazu Grundfunktionen des Programms in Klassse umsetzen?)
+- [ ]  GUI erstellen
+- [ ] Kalibrierung für Balsaholz
+- [ ] Funktionalität für PVC-Schaum
+- [ ]  Unterstützung mehrerer Heizplatten (dazu Grundfunktionen des Programms in Klassse umsetzen?)
