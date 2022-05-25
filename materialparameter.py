@@ -10,6 +10,14 @@ def parameterMatrix(): #NUR WENN NICHT TEMPERATURABHÄNGIG GEWÜNSCHT IST.
     k_M = 0.2 #0,2
     
     return density_M, c_M, k_M
+
+def parameterAirrexC70(): #keine Temperaturabhängigkeit
+    
+    density_A = 40-250 #RANGE LAUT DATENBLATT
+    c_A= 1200 #SCHÄTZWERT
+    k_A = 0.031-0.056 #RANGE LAUT DATENBLATT
+    
+    return density_A, c_A, k_A
     
 def parameterFaser():
     
@@ -124,3 +132,6 @@ def calcSchichtT(ny, alpha, u, dt, dy2):
     aa_schicht = (a_schicht * dt)/dy2
     
     return a_schicht, aa_schicht, density_schicht, k_comp, cp_comp
+
+#TODO: Bessere Einbindung verschiedener Matrix und Kernstoffe.
+        #Bibliothek?
