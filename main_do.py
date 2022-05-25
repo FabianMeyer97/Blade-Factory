@@ -3,25 +3,20 @@ Main Datei
 
 """
 import numpy as np
-import wärmeleitung as w
 import write
 import reg
 import time
 import Einlesen as e
-import keyboard
-#import tkinter as tk
-import datetime
 
 global slicer, oldslice
 global str_clock, str_T_max, str_a_max, str_a_min, str_wenn_plus, str_wenn_minus
-
-#test
 
 h = 0.013 #[m]
 dy = 0.001#[m]
 dt = 1
 ny = int(h/dy)
 dy2 = dy*dy
+
 #Hier boundaries eingeben [in mm]:
 boundary1 = int(7)
 boundary2 = int((6.5+31.5))
@@ -36,13 +31,7 @@ plus = 20
 documentation = []
 np.array(documentation)
 
-# def update_clock():
-#     # get current time as text
-#     current_time = datetime.datetime.now().strftime("Time: %H:%M:%S")
-    
-#     lab.config(text=current_time)
-#     #lab['text'] = current_time 
-#     root.after(1000, update_clock) 
+
 def set_clock():
     global str_clock
     str_clock = "Verstrichende Zeit in Sekunden: " + str(slicer)
@@ -137,14 +126,12 @@ def do_process(q, start, plus, starttime):
     
     if q == 0:
         dif1 = int(endtime-start)
-        #dif1 = int(input("Slicer"))
         print("Verstrichende Zeit in Sekunden: " + str(dif1))
         slicer += dif1 
     else: 
         #Die entfernten Zeilen müssen in der TKinter Datei angepasst werden --> "Schalter"Funktion die durch button klick ausgelöst wird
         oldslice = slicer
         slicer += int(endtime-starttime)
-        #slicer = int(input("Slicer"))
         print("Verstrichende Zeit in Sekunden: " + str(slicer))
         
     documentation.append((slicer, eingegeben))    

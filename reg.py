@@ -1,25 +1,8 @@
-"""
-Main Datei
-
-"""
 import numpy as np
 import materialparameter as m
 import reaktionskinetik as r
 import wärmeleitung as w
 import write
-import time
-
-
-
-#U GES[:SCLICER] = U_GES [SLICER] damit nicht vorherige WERTE bernommen werden können!!!
-#TODO: MAX UND MIN ALPHA AUSGEBEN.
-
-#u_ges leer mit Anfangstemperatur und Temperaturkurve
-#nsteps steps in die Zukunft
-#U-ges rausschreiben
-#Neu rechnen, u_ges von 100 sekunden nehmen, u[0] und temperaturrampe neu definieren
-#Steps widerholen 
-
 
 def setVal(ny, nsteps, dt, dy2 ):
     
