@@ -15,6 +15,8 @@ import datetime
 global slicer, oldslice
 global str_clock, str_T_max, str_a_max, str_a_min, str_wenn_plus, str_wenn_minus
 
+#test
+
 h = 0.013 #[m]
 dy = 0.001#[m]
 dt = 1
