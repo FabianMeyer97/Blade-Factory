@@ -96,18 +96,6 @@ def get_wenn_minus():
     global str_wenn_minus
     return str_wenn_minus
 
-"""
-while True:
-    try:     
-        eingegeben1 = int(input("Aktuelle Heizplattentemp in °C: "))+273.15
-        #eingegeben1 = e.getTemperature(10)
-    except ValueError:
-        print("Keine Integer-Zahl eingegeben")
-    else:
-        if (eingegeben1 > 0+273.15 and eingegeben1 < 150+273.15):
-            break   
-        print("Wert zu hoch oder zu gering!")
-"""
 def do_once():
     global u_ges, alpha_ges, dadt_ges, u, u0
     global u_ges_PLUS, alpha_ges_PLUS, dadt_ges_PLUS, u_PLUS, u0_PLUS 
@@ -125,17 +113,13 @@ def do_once():
     plus = (maxerlaubteTemperatur - np.amax(u_ges))/2
     if plus < 0:
         plus = 0
-    print(plus)
-    
-    #write.animatePlot(u_ges[:stepsprorechnung], stepsprorechnung)
-    
-    
+    print(plus) #Temperaturzuschlag/abzug für Parallelrechnungen
+    #write.animatePlot(u_ges[:stepsprorechnung], stepsprorechnung)   
     slicer = 0
     oldslice = 0
     q = -1
     return q, start, plus
     
-#while True:  
 def do_process(q, start, plus, starttime):
     global u_ges, alpha_ges, dadt_ges, u, u0
     global u_ges_PLUS, alpha_ges_PLUS, dadt_ges_PLUS, u_PLUS, u0_PLUS 
@@ -155,17 +139,7 @@ def do_process(q, start, plus, starttime):
         print("Verstrichende Zeit in Sekunden: " + str(dif1))
         slicer += dif1 
     else: 
-        """                
-        if eingegeben == 555+273.15:            
-             w.switchH = not w.switchH
-        """
-        """
-        if keyboard.read_key() == "p" or keyboard.read_key() == "f":            #Hier wird auf Eingabe gewartet tkinter hat wohl eine Funktion die das
-                                                                                #ganze besser macht.
-            w.switchH = not w.switchH
-        if w.switchH == True:
-            print("FLIEß IST ABGELEGT \n p oder f drücken um Fließ zu entfernen!")   
-        """    
+        #Die entfernten Zeilen müssen in der TKinter Datei angepasst werden --> "Schalter"Funktion die durch button klick ausgelöst wird
         oldslice = slicer
         slicer += int(endtime-starttime)
         #slicer = int(input("Slicer"))
@@ -188,8 +162,7 @@ def do_process(q, start, plus, starttime):
     print(plus)
     #write.animatePlot(u_ges[:stepsprorechnung+slicer], stepsprorechnung+slicer)    
         
-    return q, plus, starttime
-#root.mainloop()            
+    return q, plus, starttime           
 #write.plot_heatmap2(stepsprorechnung+slicer, dt, u_ges[:stepsprorechnung+slicer])
 
 def end_process():
@@ -197,4 +170,5 @@ def end_process():
     global slicer
     np.savetxt("documentation.csv", documentation)
     write.save(u_ges[:stepsprorechnung+slicer], alpha_ges[:stepsprorechnung+slicer], dadt_ges[:stepsprorechnung+slicer])
+    write.animatePlot(u_ges[:stepsprorechnung+slicer], stepsprorechnung+slicer) 
     print(documentation)

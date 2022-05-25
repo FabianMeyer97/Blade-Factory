@@ -82,7 +82,13 @@ def update():
 T = th.Timer(1.0, update)
 T.start()
 
-
-
-
 window.mainloop()
+
+"""
+TODO: - Start on Button Klick
+      - a-Max a min anpassen
+      - Layout anpassen
+      - Graph einbauen
+          --> Eventuell neue Graphfunktion notwendig
+    
+"""    
