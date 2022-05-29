@@ -1,0 +1,18 @@
+
+1. Download Software for Redlab Drivers at: https://www.meilhaus.de/en/produkte/daq/redlab/redlab-software/
+
+2. Connect Redlab DAQ to PC
+
+3. Install Redlab Drivers by running install.exe
+
+4. Run the installed programm "Instacal"
+
+5. Let system find the connected RedLab DAQ. Set BoardNumber to "0". Set thermocouple to correct type.
+
+
+Additional Info:
+
+Connect Thermocouple to CH0 (Channel 0) 
+
+
+API DAQ for Python: https://www.mccdaq.com/PDFs/Manuals/Mcculw_WebHelp/ULStart.htm
