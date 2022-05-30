@@ -37,10 +37,7 @@ np.array(documentation)
 # def update_clock():
 #     # get current time as text
 #     current_time = datetime.datetime.now().strftime("Time: %H:%M:%S")
-    
-#     lab.config(text=current_time)
-#     #lab['text'] = current_time 
-#     root.after(1000, update_clock) 
+     
 def set_clock():
     global str_clock
     str_clock = "Verstrichende Zeit in Sekunden: " + str(slicer)
