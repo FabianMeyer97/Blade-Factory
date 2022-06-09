@@ -88,8 +88,12 @@ window.mainloop()
 
 """
 TODO: - a-Max a min anpassen
+      - Vorhersage wann aushärtegrad erreicht ist.
+      - Kommentare bei materialparameter/reaktionskinetik/wärmeleitung
       - Layout anpassen
       - Graph einbauen
           --> Eventuell neue Graphfunktion notwendig
+         --> Mehrere Graphen durch Drop down menü
+         --> Tabelle die die Werte ausgibt
     
 """    

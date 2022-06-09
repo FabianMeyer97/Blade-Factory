@@ -18,6 +18,7 @@ def filtered_temp():
     avg10.remove(max(avg10))
     avg10.remove(min(avg10))
     #Might need additional einschränkungen:
+        #MEdian Einbauen
     avg_temp = 0
     for i in range(len(avg10)):     
         avg_temp += avg10[i]
