@@ -3,14 +3,15 @@ Hier werden Materialparamter definiert.
 """
 import numpy as np
 
-def parameterMatrix(): #NUR WENN NICHT TEMPERATURABHÄNGIG GEWÜNSCHT IST.
-    
+
+#NUR WENN NICHT TEMPERATURABHÄNGIG GEWÜNSCHT IST:
+def parameterMatrix():   #Parameter von Epoxy Resin
     density_M = 1150
     c_M = 1400
-    k_M = 0.2 #0,2
-    
+    k_M = 0.2  
     return density_M, c_M, k_M
 
+#Paramter AirrexC70:
 def parameterAirrexC70(): #keine Temperaturabhängigkeit
     
     density_A = 40-250 #RANGE LAUT DATENBLATT
@@ -18,46 +19,40 @@ def parameterAirrexC70(): #keine Temperaturabhängigkeit
     k_A = 0.031-0.056 #RANGE LAUT DATENBLATT
     
     return density_A, c_A, k_A
-    
-def parameterFaser():
-    
+
+#Parameter für Glasfasern:    
+def parameterFaser(): 
     phi = 0.55 #Faservolumengehalt
     density_F = 2600
     c_F = 807
-    k_F = 1
-    
+    k_F = 1   
     return phi, density_F, c_F, k_F
 
-def hSchicht(density_schicht, cp_comp, k_comp, u, Text):
-    
+#Berechnung des Wärmeübertragungskoeffizienten der Luft an der oberen Grenze:
+def hSchicht(density_schicht, cp_comp, k_comp, u, Text):  
     g = 9.81
-    QuadSize = 1/120 #L = 1/80
+    QuadSize = 1/120 #Elementsize from which heat is transferred. Has to be calibrated by hand
     
     #dynamic_viscosity = 0.0000182
     dynamic_viscosity = (2*10**-7)*(u[-1]-273.15)+2*10**-5
-    ap = 1/Text#(u[-1]-273.15)
+    ap = 1/Text
+    Pr = (dynamic_viscosity * cp_comp[-1])/ 0.02289 #Prandtl Number
+    GrL = (g * ap * ((u[-1]-273.15) - Text) * QuadSize**3)/ (dynamic_viscosity / 1.1455)**2 #Grashof Number 
     
-    Pr = (dynamic_viscosity * cp_comp[-1])/ 0.02289#k_comp[-1]
-    
-    GrL = (g * ap * ((u[-1]-273.15) - Text) * QuadSize**3)/ (dynamic_viscosity / 1.1455)**2
-    
-    #RaL = ((g * ap * (density_schicht)**2 * cp_comp * (u[-1]-Text) * L**3 ))/ (k_comp[-1]*dynamic_viscosity)
-    RaL = GrL * Pr
+    RaL = GrL * Pr #Rayleigh number 
     #h_luft = (k_comp[-1]/L) * 0.27 * RaL**(1/4)
-    h_luft = (0.02289/QuadSize) * 0.27 * RaL**(1/4)
+    h_luft = (0.02289/QuadSize) * 0.27 * RaL**(1/4)  #heat transfer coefficient 
     #h_luft = 20
     return h_luft
 
-def parameterBalsa():
-    
+#Parameter for Balsa Wood
+def parameterBalsa():  
     k_balsa = 0.06 #0.06-0.0935
-    density_balsa = 140#140
-    c_balsa = 2720#2720
-    
+    density_balsa = 140
+    c_balsa = 2720   
     return k_balsa, density_balsa, c_balsa
 
-#Im Folgenden: Verbund OHNE Temperatur/alpha Abhängigkeit:
-
+#Calculated a GFRP laminate based on the parameters given above, with no temperature dependency
 def calcVerbund():
     
     density_M, c_M, k_M = parameterMatrix()
@@ -70,6 +65,7 @@ def calcVerbund():
     
     return density_schicht, c_schicht, k_schicht, phi, density_M
 
+#Heat equation requires the diffusivity of a material which gets calculated here:
 def calcDiffusivityBalsa(dt, dy2):
     
     k_balsa, density_balsa, c_balsa = parameterBalsa()
@@ -78,6 +74,8 @@ def calcDiffusivityBalsa(dt, dy2):
     
     return a_balsa, aa_balsa
 
+
+#The follwing functions calculate cp, and k of epoxy resin temperature dependant
 def calc_cp_epoxy(u, alpha, ny):
     
     
@@ -119,7 +117,7 @@ def calc_k_epoxy(alpha, ny):
     k_comp = k_harz * ((k_F * (1+phi)+k_harz*(1-phi))/(k_F * (1-phi)+k_harz*(1-phi)))
 
     return k_comp
-
+#Calculates the GFRP Laminate with temperature and Degree of curing dependency:
 def calcSchichtT(ny, alpha, u, dt, dy2):
     
     density_schicht, c_schicht, k_schicht, phi, density_M = calcVerbund()

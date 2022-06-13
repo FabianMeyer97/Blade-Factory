@@ -6,6 +6,7 @@ Main Window
 from tkinter import *
 import main_do
 import threading as th
+import time
 
 window = Tk()
 
@@ -42,6 +43,7 @@ def update():
         
         T = th.Timer(1.0, update)
         T.start()
+        time.sleep(5.0)
         print("go on")
         
     else:
@@ -56,7 +58,8 @@ def startProcess():
     starttime = None
     #q = -1
     T = th.Timer(1.0, update)
-    T.start()    
+    T.start()
+    
     
 lblTemp = Label(window, text="Aktuelle Heizplattentemp in °C:")
 lblTime = Label(window, text="Verstrichende Zeit in Sekunden:")
