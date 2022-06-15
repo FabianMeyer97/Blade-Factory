@@ -1,11 +1,16 @@
 """
-Hier werden alle Vorbereitungen und Methoden für die Reaktionskinetik initialisiert
+Initialization and methods to calculate reaction kinetics
+Atm a function to solve the regular Kamal-Souror and advanced Kamal-Souror with flow control are implemented
+To add a new modell, copy the existing functions for parameters and calculations and adjust accordingly
 """
 import numpy as np
 import materialparameter
 
-def reakParameter():
-    
+#At the moment, two approximations to calculate reaction kinetics are implemented
+#Kamal Souror and ... Kamal-Souror
+
+#Function returns the parameters needed for the regular Kamal-Souror approximations:
+def reakParameter():   
     A1 = 200000
     E1 = 63267.9637
     A2 = 118000.438
@@ -15,12 +20,11 @@ def reakParameter():
     R = 8.314
     Htot = 450 * 1000 #450 * 1000 
     alpha_start = 0.0000001 #0.00000001
-    heizrate = 2.5  #pro sekunde
-    
+    heizrate = 2.5  #pro sekunde 
     return A1, E1, A2, E2, s, v, R, Htot, alpha_start, heizrate
 
-def reakParameter_135():
-    
+#Parameters for the advanced Kamal-Souror approximation:
+def reakParameter_135():  
     A1 = 35982
     E1 = 54960
     A2 = 3574.1
@@ -42,8 +46,8 @@ def reakParameter_135():
     
     return A1, E1, A2, E2, s, v, R, Htot, alpha_start, heizrate, Ad, Ed, alphaf, b, fg, Tg0, Tg00, Lambda
 
-def reakArrays(ny, nsteps):
-    
+#Funtion initializes the arrays needed to run the calculations
+def reakArrays(ny, nsteps): 
     A1, E1, A2, E2, s, v, R, Htot, alpha_start, heizrate = reakParameter()
     k1 = np.zeros(ny)
     k2 = np.zeros(ny)
@@ -54,25 +58,22 @@ def reakArrays(ny, nsteps):
     alpha_ges = np.ones((nsteps, ny))
     dadt_ges = np.copy(alpha_ges)
     reak_kinetic_ges = np.copy(alpha_ges)
-    
     return k1, k2, alpha, alpha0, dadt, dadt0, alpha_ges, dadt_ges, reak_kinetic_ges
 
+#Reaction kinetics get solved with the regular Kamal-Souror method with the following function:
 def calcReaktionskinetik(ny, dt,  phi, density_M, density_schicht, u0, u, boundary1, boundary2, nsteps, alpha0, dadt0):
     
     A1, E1, A2, E2, s, v, R, Htot, alpha_start, heizrate = reakParameter()
-    #k1, k2, alpha, alpha0, dadt, dadt0, alpha_ges, dadt_ges = reakArrays(ny, nsteps)
-    
+    #k1, k2, alpha, alpha0, dadt, dadt0, alpha_ges, dadt_ges = reakArrays(ny, nsteps)  
     k1 = A1 * np.exp(-E1/(R*u0))
     k2 = A2 * np.exp(-E2/(R*u0))
     alpha = alpha0 + (dadt0*dt)    
     dadt = ((k1 + (k2 * (alpha)**s))) * (1 - alpha)**v
     cp_comp = materialparameter.calc_cp_epoxy(u, alpha, ny)
-    
     reak_kinetik = dt * ((dadt * Htot * (1 - phi) * density_M) / (cp_comp * density_schicht))
-    
-    #hier herrausfinden wie genau boundary1 und boundary 2 funktionieren.
     return reak_kinetik, alpha, dadt
 
+#Reaction kinetics get solved with the advanced Kamal-Souror method with the following function:
 def calcReaktionskinetik_135(ny, dt,  phi, density_M, density_schicht, u0, u, boundary1, boundary2, nsteps, alpha0, dadt0):
     
     A1, E1, A2, E2, s, v, R, Htot, alpha_start, heizrate, Ad, Ed, alphaf, b, fg, Tg0, Tg00, Lambda = reakParameter_135()
@@ -90,6 +91,5 @@ def calcReaktionskinetik_135(ny, dt,  phi, density_M, density_schicht, u0, u, bo
     cp_comp = materialparameter.calc_cp_epoxy(u, alpha, ny)
     
     reak_kinetik = dt * ((dadt * Htot * (1 - phi) * density_M) / (cp_comp * density_schicht))
-    
-    #hier herrausfinden wie genau boundary1 und boundary 2 funktionieren.
+
     return reak_kinetik, alpha, dadt, Tg

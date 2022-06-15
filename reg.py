@@ -128,7 +128,7 @@ def regelung2(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben,slice
         dadt_ges[:stepsprorechnung+oldslice] = np.copy(dadt_ges_read)
         alpha_ges[:stepsprorechnung+oldslice] = np.copy(alpha_ges_read)
         
-    print("a_max: " + str(np.amax(alpha_ges[slicer])) + "\na_min: " + str(np.amin(alpha_ges[slicer])))
+   
     
     
     u = u_ges[slicer]   
@@ -168,7 +168,7 @@ def regelung2(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben,slice
     alpha_ges_write = np.copy(alpha_ges[:stepsprorechnung+slicer])
     
     write.save(u_ges_write, alpha_ges_write, dadt_ges_write)
-    
+    print("a_max: " + str(np.amax(alpha_ges[slicer])) + "\na_min: " + str(np.amin(alpha_ges[slicer])))
     #Wann wird minimaler Alpha überall erreicht?:
     MinAlpha = np.amin(alpha_ges[slicer:])#, stepsprorechnung+slicer])
     WhereMinAlpha = np.where(alpha_ges == MinAlpha)

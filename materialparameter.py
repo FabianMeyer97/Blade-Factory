@@ -1,10 +1,10 @@
 """
-Hier werden Materialparamter definiert.
+Definitions of material parameters
 """
 import numpy as np
 
 
-#NUR WENN NICHT TEMPERATURABHÄNGIG GEWÜNSCHT IST:
+#parameter for epoxy without temperature dependence:
 def parameterMatrix():   #Parameter von Epoxy Resin
     density_M = 1150
     c_M = 1400
@@ -20,7 +20,7 @@ def parameterAirrexC70(): #keine Temperaturabhängigkeit
     
     return density_A, c_A, k_A
 
-#Parameter für Glasfasern:    
+#Parameter for glas fibre:    
 def parameterFaser(): 
     phi = 0.55 #Faservolumengehalt
     density_F = 2600
@@ -28,7 +28,7 @@ def parameterFaser():
     k_F = 1   
     return phi, density_F, c_F, k_F
 
-#Berechnung des Wärmeübertragungskoeffizienten der Luft an der oberen Grenze:
+#Calculation of the heat transfer coefficient of the air at the upper boundary:
 def hSchicht(density_schicht, cp_comp, k_comp, u, Text):  
     g = 9.81
     QuadSize = 1/120 #Elementsize from which heat is transferred. Has to be calibrated by hand
@@ -82,10 +82,10 @@ def calc_cp_epoxy(u, alpha, ny):
     cp_epoxycured = np.ones(ny)
     cp_epoxyuncured = np.ones(ny)
     
-    #Temperaturabhängigkeit:
+    #Temperature dependency:
     cp_epoxycured = 4.608 * u + 1100  
     cp_epoxyuncured = 1.6 * u + 1642.1
-    #Aushärtegradabhängigkeit:
+    #Dependency on degree of cure:
     cp_harz = np.ones(ny)
     cp_harz = alpha*cp_epoxycured + (1 - alpha)*cp_epoxyuncured
     

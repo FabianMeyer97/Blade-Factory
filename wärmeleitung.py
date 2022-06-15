@@ -31,7 +31,15 @@ def kelvin_to_celsius(u0, u, u_ges):
     u -= 273.15
     u_ges -= 273.15
     return u0, u, u_ges
+"""
+If you want to calculate the heat transfer over different materials the heat eqution needs
+to be broken up upon the various materials. A sandwich GFRP-component needs 3 different heat
+equations. To "connect" the seperate equations, the adjacent points share a boundary condition.
+This interface boundary conditions calculates the temperature at the boundary dependent on
+the material parameters. 
+"""
 
+#Calc U1-3 are the broken up heat equations for a sandwich component.
 def calcU1(u, u0, a, leftB, rightB): 
     u[leftB:rightB-1] = u0[leftB:rightB-1] + a[leftB:rightB-1] * (u0[leftB+1:rightB] - 2*u0[leftB:rightB-1] + u0[leftB-1:rightB-2])
     return u
@@ -44,9 +52,14 @@ def calcU3(u, u0, a, leftB, rightB):
     u[leftB:-1] = u0[leftB:-1] + a[leftB:-1] * (u0[leftB+1:] - 2*u0[leftB:-1] + u0[leftB-1:-2])
     return u
 
+#CalcU calculates a complete component without being broken up
 def calcU(u, u0, a, leftB, rightB): 
     u[leftB:rightB] = u0[leftB:rightB] + a[leftB:rightB] * (u0[leftB+1:] - 2*u0[leftB:rightB] + u0[leftB-1:rightB-1])
     return u
+
+"""
+interfaceBoundary 1 and 2 are previously mentioned calculations for the boundaries
+"""
 
 def interfaceBoundary1(aa_schicht, aa_balsa, u0, boundary1):
     
@@ -66,8 +79,13 @@ def interfaceBoundary2(aa_schicht, aa_balsa, u0, boundary2):
     
     return u0[boundary2]
 
+#The outermost boundary is a robin boundary, which is a boundary that approximates
+#a heat dissipation in air
+
 def robinBoundary(ny, k_comp, dy, u, u0, density_schicht, cp_comp):
     T_out = 23
+    #The switch controls wether the heat dissipation coefficient gets calculated or is a 
+    #fixed value. Switch can be turned on and off while the main program loop is running
     if switchH == False:
         h_luft = m.hSchicht(density_schicht, cp_comp, k_comp, u, T_out)
     if switchH == True:

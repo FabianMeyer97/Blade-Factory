@@ -8,7 +8,6 @@ import write
 import reg
 import time
 import Einlesen as e
-import keyboard
 #import tkinter as tk
 import datetime
 
