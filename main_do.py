@@ -57,16 +57,36 @@ def get_T_max():
 def set_a_max():
     global alpha_ges
     global str_a_max
-    str_a_max = str(np.amax(alpha_ges[slicer]))
+    str_a_max = np.amax(alpha_ges[slicer])
 
 def get_a_max():
     global str_a_max
     return str_a_max
 
+def set_max_alpha():
+    max_alpha_in_that_step = np.amax(alpha_ges[slicer:stepsprorechnung+slicer])
+
+def get_max_alpha():
+    max_alpha_in_that_step = np.amax(alpha_ges[slicer:stepsprorechnung+slicer])
+    return max_alpha_in_that_step
+
+def find_when_alpha_min():
+    
+    alpha_reached = 1
+    alpha_reached_at = 1
+    found_alpha = False
+    for k in range(stepsprorechnung):
+        if np.amin(alpha_ges[slicer+k,:]) >= 0.005:
+            alpha_reached = np.amin(alpha_ges[slicer+k,:])
+            alpha_reached_at = slicer+k
+            found_alpha = not found_alpha
+            break
+    return alpha_reached, alpha_reached_at, found_alpha
+
 def set_a_min():
     global alpha_ges
     global str_a_min
-    str_a_min = str(np.amin(alpha_ges[slicer]))
+    str_a_min = np.amin(alpha_ges[slicer])
 
 def get_a_min():
     global str_a_min
@@ -146,6 +166,7 @@ def do_process(q, start, plus, starttime):
     u_ges, alpha_ges, dadt_ges, u, u0 = reg.regelung2(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben, slicer, stepsprorechnung, oldslice)
     set_a_max()
     set_a_min()
+    set_max_alpha()
     u_ges_PLUS, alpha_ges_PLUS, dadt_ges_PLUS, u_PLUS, u0_PLUS = reg.regelung2_PLUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben,slicer, stepsprorechnung, oldslice, plus)
     set_wenn_plus()
     u_ges_MINUS, alpha_ges_MINUS, dadt_ges_MINUS, u_MINUS, u0_MINUS = reg.regelung2_MINUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben,slicer, stepsprorechnung, oldslice, plus)

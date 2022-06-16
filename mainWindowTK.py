@@ -36,8 +36,11 @@ def update():
         #global str_clock, str_T_max, str_a_max, str_a_min, str_wenn_plus, str_wenn_minus
         lblTime.configure(text= main_do.get_clock())
         lblTmax.configure(text= "T_max: "+main_do.get_T_max() )
-        lblamax.configure(text= "a_max: "+main_do.get_a_max() )
-        lblamin.configure(text= "a_min: "+main_do.get_a_min() )
+        lblamax.configure(text= f"a_max: {main_do.get_a_max():.2%}")
+        lblamin.configure(text= f"a_min: {main_do.get_a_min():.2%}")
+        alpha_reached, alpha_reached_at, found_alpha = main_do.find_when_alpha_min()
+        if found_alpha == True:
+            lblAlpha80.configure(text = f"Alpha von {alpha_reached:.1%} in {alpha_reached_at} sec erreicht")    
         lblPlus.configure(text= main_do.get_wenn_plus() )
         lblMinus.configure(text= main_do.get_wenn_minus() )
         
@@ -68,6 +71,7 @@ lblamin = Label(window, text="a_min:")
 lblTmax = Label(window, text="T_max:")
 lblPlus = Label(window, text="wenn + X °C:")
 lblMinus = Label(window, text="wenn - X °C:")
+lblAlpha80 = Label(window)
 btnUpdate = Button(window, text="Update", command=clicked)
 btnStart = Button(window, text="Start", command=startProcess)
 btnEnd = Button(window, text="Stop", command=endMeasurement)
@@ -79,6 +83,7 @@ lblamin.grid(column=1, row=3)
 lblTmax.grid(column=1, row=4)
 lblPlus.grid(column=1, row=5)
 lblMinus.grid(column=1, row=6)
+lblAlpha80.grid(column=1, row=10)
 btnUpdate.grid(column=3, row=0)
 btnStart.grid(column=0, row=0)
 btnEnd.grid(column=1, row=7)
@@ -91,7 +96,6 @@ window.mainloop()
 
 """
 TODO: 
-      - Vorhersage wann aushärtegrad erreicht ist.
       - Layout anpassen
       - Graph einbauen
           --> Eventuell neue Graphfunktion notwendig
