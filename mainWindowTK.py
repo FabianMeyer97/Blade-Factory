@@ -7,6 +7,7 @@ import main_do
 import threading as th
 import time
 import Einlesen
+import wärmeleitung
 
 window = Tk()
 
@@ -19,6 +20,15 @@ do_continue = True
 def clicked():
     res = "Heizplattentemperatur: " + txtTemp.get()
     lblTemp.configure(text= res)
+
+def vliesButton():
+    wärmeleitung.switchH = not wärmeleitung.switchH        
+    lblVlies = Label(window, text="Vließ abgelegt")
+    if wärmeleitung.switchH == True:    
+        lblVlies.grid(column=1,row= 13)
+    else:
+        lblVlies.destroy()
+    
     
 def endMeasurement():
     global do_continue
@@ -73,26 +83,48 @@ lblTmax = Label(window, text="T_max:")
 lblPlus = Label(window, text="wenn + X °C:")
 lblMinus = Label(window, text="wenn - X °C:")
 lblAlpha80 = Label(window)
+
+lblTempMINUS = Label(window, text = f"MINUS: ") #hier muss noch -MINUS gegetted werden
+lblMaxTempMINUS = Label(window, text = "MaxTemp")
+lblAlphaMinus = Label(window, text = "AlphaMInus")
+
+lblTempPLUS = Label(window, text = f"PLUS: ") #hier muss noch -PLUS gegetted werden
+lblMaxTempPLUS = Label(window, text = "MaxTemp")
+lblAlphaPLUS = Label(window, text = "AlphaPLUS")
+
+
 btnUpdate = Button(window, text="Update", command=clicked)
 btnStart = Button(window, text="Start", command=startProcess)
 btnEnd = Button(window, text="Stop", command=endMeasurement)
+btnVlies = Button(window, text="Vlies", command=vliesButton)
 
-lblTemp.grid(column=1, row=1)
-lblTime.grid(column=1, row=3)
-lblamax.grid(column=1, row=4)
-lblamin.grid(column=1, row=5)
-lblTmax.grid(column=1, row=2)
-lblPlus.grid(column=1, row=6)
-lblMinus.grid(column=1, row=7)
-lblAlpha80.grid(column=1, row=12)
-btnUpdate.grid(column=3, row=12)
+lblTempMINUS.grid(column=1, row=2)
+lblMaxTempMINUS.grid(column=1,row=3)
+lblAlphaMinus.grid(column=1,row=4)
+
+lblTempPLUS.grid(column=3, row=2)
+lblMaxTempPLUS.grid(column=3,row=3)
+lblAlphaPLUS.grid(column=3,row=4)
+
+lblTemp.grid(column=2, row=2)
+lblTime.grid(column=2, row=1)
+lblamax.grid(column=2, row=4)
+lblamin.grid(column=2, row=5)
+lblTmax.grid(column=2, row=3)
+lblPlus.grid(column=2, row=6)
+lblMinus.grid(column=2, row=7)
+lblAlpha80.grid(column=2, row=12)
+btnUpdate.grid(column=4, row=12)
 btnStart.grid(column=0, row=0)
 btnEnd.grid(column=0, row=12)
+btnVlies.grid(column=0, row=13)
+
 
 txtTemp = Entry(window,width=10)
-txtTemp.grid(column=2, row=12)
+txtTemp.grid(column=3, row=12)
 
 window.mainloop()
+
 """
 TODO: 
       - Layout anpassen
