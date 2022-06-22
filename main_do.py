@@ -136,7 +136,7 @@ def do_once():
     q = -1
     return q, start, plus
     
-def do_process(q, start, plus, starttime):
+def do_process(q, start, plus, starttime, eingegeben):
     global u_ges, alpha_ges, dadt_ges, u, u0
     global u_ges_PLUS, alpha_ges_PLUS, dadt_ges_PLUS, u_PLUS, u0_PLUS 
     global u_ges_MINUS, alpha_ges_MINUS, dadt_ges_MINUS, u_MINUS, u0_MINUS
@@ -146,7 +146,6 @@ def do_process(q, start, plus, starttime):
     global slicer, oldslice
     q += 1  
     
-    eingegeben = e.getTemperature(10)
     endtime = time.time()
     
     if q == 0:
