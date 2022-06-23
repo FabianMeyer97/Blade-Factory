@@ -48,7 +48,7 @@ def get_clock():
 def set_T_max():
     global u_ges
     global str_T_max
-    str_T_max = str(np.amax(u_ges[slicer:])-273.15) 
+    str_T_max = np.amax(u_ges[slicer:])-273.15
 
 def get_T_max():
     global str_T_max
@@ -111,6 +111,9 @@ def set_wenn_minus():
 def get_wenn_minus():
     global str_wenn_minus
     return str_wenn_minus
+
+def get_minus():
+    return str(np.amax(u_ges_MINUS[slicer:])-273.15)                   
 
 def do_once():
     global u_ges, alpha_ges, dadt_ges, u, u0

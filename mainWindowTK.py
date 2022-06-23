@@ -46,14 +46,16 @@ def update():
         #global str_clock, str_T_max, str_a_max, str_a_min, str_wenn_plus, str_wenn_minus
         lblTime.configure(text= main_do.get_clock())
         lblTemp.configure(text= f"Heizplattentemperatur: {temperature-273.15:.1f} °C")
-        lblTmax.configure(text= "T_max: "+main_do.get_T_max() )
+        lblTmax.configure(text= f"T_max: {main_do.get_T_max():.1f}")
         lblamax.configure(text= f"a_max: {main_do.get_a_max():.2%}")
         lblamin.configure(text= f"a_min: {main_do.get_a_min():.2%}")
         alpha_reached, alpha_reached_at, found_alpha = main_do.find_when_alpha_min()
         if found_alpha == True:
-            lblAlpha80.configure(text = f"Alpha von {alpha_reached:.1%} in {alpha_reached_at} sec erreicht")    
-        lblPlus.configure(text= main_do.get_wenn_plus() )
-        lblMinus.configure(text= main_do.get_wenn_minus() )
+            lblAlpha80.configure(text = f"Alpha von {alpha_reached:.1%} in {alpha_reached_at} sec erreicht")
+            
+        lblMaxTempMINUS.configure(text="T_max: " + main_do.get_minus())
+        #lblPlus.configure(text= main_do.get_wenn_plus() )
+        #lblMinus.configure(text= main_do.get_wenn_minus() )
         
         T = th.Timer(1.0, update)
         T.start()
@@ -85,7 +87,7 @@ lblMinus = Label(window, text="wenn - X °C:")
 lblAlpha80 = Label(window)
 
 lblTempMINUS = Label(window, text = f"MINUS: ") #hier muss noch -MINUS gegetted werden
-lblMaxTempMINUS = Label(window, text = "MaxTemp")
+lblMaxTempMINUS = Label(window, text = "T_max")
 lblAlphaMinus = Label(window, text = "AlphaMInus")
 
 lblTempPLUS = Label(window, text = f"PLUS: ") #hier muss noch -PLUS gegetted werden
@@ -118,7 +120,6 @@ btnUpdate.grid(column=4, row=12)
 btnStart.grid(column=0, row=0)
 btnEnd.grid(column=0, row=12)
 btnVlies.grid(column=0, row=13)
-
 
 txtTemp = Entry(window,width=10)
 txtTemp.grid(column=3, row=12)

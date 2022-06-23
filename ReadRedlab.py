@@ -1,4 +1,5 @@
 from mcculw import ul
+import statistics
 
 def initialize_board_one():
     #Gets board Number, Channel and Scale for 
@@ -24,13 +25,9 @@ def filtered_temp():
         avg_temp += avg10[i]
     avg_temp /= len(avg10)
     
-    """
-    for el in avg10:
-        if el > 1.5*avg_temp or el < 0.5*avg_temp:
-            avg10.remove(el)
-    """
+    med_temp = statistics.median(avg10)
+  
     return avg_temp
-
 
 while True:
     input("Get Temp")    
