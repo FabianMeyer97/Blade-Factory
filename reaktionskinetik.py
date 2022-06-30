@@ -10,7 +10,7 @@ import materialparameter
 #Kamal Souror and ... Kamal-Souror
 
 #Function returns the parameters needed for the regular Kamal-Souror approximations:
-def reakParameter():   
+def reakParameter(): #035  
     A1 = 200000
     E1 = 63267.9637
     A2 = 118000.438

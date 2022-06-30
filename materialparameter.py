@@ -3,7 +3,7 @@ Definitions of material parameters
 """
 import numpy as np
 
-
+#Diffusivity relevant for heat equation
 #parameter for epoxy without temperature dependence:
 def parameterMatrix():   #Parameter von Epoxy Resin
     density_M = 1150
@@ -28,22 +28,7 @@ def parameterFaser():
     k_F = 1   
     return phi, density_F, c_F, k_F
 
-#Calculation of the heat transfer coefficient of the air at the upper boundary:
-def hSchicht(density_schicht, cp_comp, k_comp, u, Text):  
-    g = 9.81
-    QuadSize = 1/120 #Elementsize from which heat is transferred. Has to be calibrated by hand
-    
-    #dynamic_viscosity = 0.0000182
-    dynamic_viscosity = (2*10**-7)*(u[-1]-273.15)+2*10**-5
-    ap = 1/Text
-    Pr = (dynamic_viscosity * cp_comp[-1])/ 0.02289 #Prandtl Number
-    GrL = (g * ap * ((u[-1]-273.15) - Text) * QuadSize**3)/ (dynamic_viscosity / 1.1455)**2 #Grashof Number 
-    
-    RaL = GrL * Pr #Rayleigh number 
-    #h_luft = (k_comp[-1]/L) * 0.27 * RaL**(1/4)
-    h_luft = (0.02289/QuadSize) * 0.27 * RaL**(1/4)  #heat transfer coefficient 
-    #h_luft = 20
-    return h_luft
+
 
 #Parameter for Balsa Wood
 def parameterBalsa():  
@@ -77,8 +62,7 @@ def calcDiffusivityBalsa(dt, dy2):
 
 #The follwing functions calculate cp, and k of epoxy resin temperature dependant
 def calc_cp_epoxy(u, alpha, ny):
-    
-    
+     
     cp_epoxycured = np.ones(ny)
     cp_epoxyuncured = np.ones(ny)
     
@@ -130,6 +114,23 @@ def calcSchichtT(ny, alpha, u, dt, dy2):
     aa_schicht = (a_schicht * dt)/dy2
     
     return a_schicht, aa_schicht, density_schicht, k_comp, cp_comp
+
+#Calculation of the heat transfer coefficient of the air at the upper boundary:
+def hSchicht(density_schicht, cp_comp, k_comp, u, Text):  
+    g = 9.81
+    QuadSize = 1/120 #Elementsize from which heat is transferred. Has to be calibrated by hand
+    
+    #dynamic_viscosity = 0.0000182
+    dynamic_viscosity = (2*10**-7)*(u[-1]-273.15)+2*10**-5
+    ap = 1/Text
+    Pr = (dynamic_viscosity * cp_comp[-1])/ 0.02289 #Prandtl Number
+    GrL = (g * ap * ((u[-1]-273.15) - Text) * QuadSize**3)/ (dynamic_viscosity / 1.1455)**2 #Grashof Number 
+    
+    RaL = GrL * Pr #Rayleigh number 
+    #h_luft = (k_comp[-1]/L) * 0.27 * RaL**(1/4)
+    h_luft = (0.02289/QuadSize) * 0.27 * RaL**(1/4)  #heat transfer coefficient 
+    #h_luft = 20
+    return h_luft
 
 #TODO: Bessere Einbindung verschiedener Matrix und Kernstoffe.
         #Bibliothek?
