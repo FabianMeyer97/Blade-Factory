@@ -2,44 +2,89 @@
 """
 Main Window
 """
-from tkinter import *
+#from tkinter import *
+from tkinter import Label, Button, Checkbutton, Tk, IntVar, Entry
 import main_do
 import threading as th
 import time
 import Einlesen
 import wärmeleitung
 
+# experimental:
+#from tkinter import ttk
+import matplotlib
+matplotlib.use("TkAgg")
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg#, NavigationToolbar2TkAgg
+from matplotlib.figure import Figure
+from write import testPlot
+#
+
+global temperature_entered
+temperature_entered = 123
+#        if activeDAQ.get() == 1:
+#            temperature = Einlesen.getTemperature(10)+60
+#            temperature_entered = temperature
+#            txtTemp.insert(0, temperature)
+#            temperature = 100.0
+#        else:
+#            temperature = temperature_entered
+#            temperature = 100.0
 window = Tk()
 
 window.title("BladeFactory")
 
-window.geometry('700x350')
+window.geometry('500x550')
+
+matplotlib.rcParams['interactive'] = False
+
+#experimental:
+# Use TkAgg
+figure, main_do.matplotax = plt.subplots()
+# Add a canvas widget to associate the figure with canvas
+main_do.matplotcanvas = FigureCanvasTkAgg(figure, window)
+main_do.matplotcanvas.get_tk_widget().grid(row=15, column=0, columnspan=6)
+# improve: https://stackoverflow.com/questions/30774281/update-matplotlib-plot-in-tkinter-gui
+#
 
 do_continue = True
 
 def clicked():
+    global temperature_entered
     res = "Heizplattentemperatur: " + txtTemp.get()
     lblTemp.configure(text= res)
+    temperature_entered = float(txtTemp.get())
 
 def vliesButton():
-    wärmeleitung.switchH = not wärmeleitung.switchH        
-    lblVlies = Label(window, text="Vließ abgelegt")
+    global lblVlies
+    wärmeleitung.switchH = not wärmeleitung.switchH
     if wärmeleitung.switchH == True:    
-        lblVlies.grid(column=1,row= 13)
+        print("vließ hinlegen")
+        lblVlies.config(text = "Vließ hingelegt")
     else:
-        lblVlies.destroy()
-    
+        print("vließ wegnehmen")
+        lblVlies.config(text = "Vließentfernt")
     
 def endMeasurement():
     global do_continue
     do_continue = False
     
 def update():
-    global do_continue, q, start, slicer, oldslice, plus, starttime
+    global do_continue, q, start, slicer, oldslice, plus, starttime, temperature_entered
     #global u_ges, alpha_ges
     if do_continue == True:
         print("do_process()")
-        temperature = Einlesen.getTemperature(10)+60
+        if activeDAQ.get() == 1:
+            print("is active")
+            temperature = Einlesen.getTemperature(10)+60
+            temperature_entered = round(temperature)-273.15
+            txtTemp.delete(0)
+            txtTemp.insert(0, round(temperature)-273.15)
+        else:
+            print("is not active")
+            temperature = temperature_entered +273.15
+            print(temperature)
+        #temperature = Einlesen.getTemperature(10)+60
         q, plus, starttime = main_do.do_process(q, start, plus, starttime, temperature)
         print("finished")
         
@@ -59,7 +104,7 @@ def update():
         
         T = th.Timer(1.0, update)
         T.start()
-        time.sleep(5.0)
+        #time.sleep(5.0)
         print("go on")
         
     else:
@@ -68,14 +113,24 @@ def update():
 
 def startProcess():
     print("do_once()")
-    global q, start, slicer, oldslice, plus
-    q, start, plus = main_do.do_once()
+    global q, start, slicer, oldslice, plus, temperature_entered
+    if activeDAQ.get() == 1:
+        print("is active")
+        temperature = Einlesen.getTemperature(10)+60
+        temperature_entered = round(temperature)-273.15
+        txtTemp.delete(0)
+        txtTemp.insert(0, round(temperature)-273.15)
+    else:
+        print("is not active")
+        temperature = temperature_entered +273.15
+        print(temperature)
+    #temperature = Einlesen.getTemperature(10)+60
+    q, start, plus = main_do.do_once(temperature)
     global starttime
     starttime = None
     #q = -1
     T = th.Timer(1.0, update)
     T.start()
-    
     
 lblTemp = Label(window, text="Heizplattentemperatur: ")
 lblTime = Label(window, text="Zeit: ")
@@ -85,6 +140,7 @@ lblTmax = Label(window, text="T_max:")
 lblPlus = Label(window, text="wenn + X °C:")
 lblMinus = Label(window, text="wenn - X °C:")
 lblAlpha80 = Label(window)
+lblVlies = Label(window, text=" ") # kein Vließ abgelegt
 
 lblTempMINUS = Label(window, text = f"MINUS: ") #hier muss noch -MINUS gegetted werden
 lblMaxTempMINUS = Label(window, text = "T_max")
@@ -100,6 +156,9 @@ btnStart = Button(window, text="Start", command=startProcess)
 btnEnd = Button(window, text="Stop", command=endMeasurement)
 btnVlies = Button(window, text="Vlies", command=vliesButton)
 
+activeDAQ = IntVar()
+cbAutoInput = Checkbutton(window, text='DAQ Input',variable=activeDAQ, onvalue=1, offvalue=0)
+
 lblTempMINUS.grid(column=1, row=2)
 lblMaxTempMINUS.grid(column=1,row=3)
 lblAlphaMinus.grid(column=1,row=4)
@@ -108,6 +167,7 @@ lblTempPLUS.grid(column=3, row=2)
 lblMaxTempPLUS.grid(column=3,row=3)
 lblAlphaPLUS.grid(column=3,row=4)
 
+lblVlies.grid(column=1,row= 13)
 lblTemp.grid(column=2, row=2)
 lblTime.grid(column=2, row=1)
 lblamax.grid(column=2, row=4)
@@ -115,6 +175,7 @@ lblamin.grid(column=2, row=5)
 lblTmax.grid(column=2, row=3)
 lblPlus.grid(column=2, row=6)
 lblMinus.grid(column=2, row=7)
+cbAutoInput.grid(column=1, row=12)
 lblAlpha80.grid(column=2, row=12)
 btnUpdate.grid(column=4, row=12)
 btnStart.grid(column=0, row=0)

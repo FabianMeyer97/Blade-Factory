@@ -45,7 +45,7 @@ def read_MINUS():
 #Plotfunctions:
 def drawplot():
     
-    pylab.ion()
+    #pylab.ion()
     
     line, = pylab.plot(0,1,"ro", markersize = 8)
     pylab.axis([0,1,0,1])
@@ -110,3 +110,38 @@ def animatePlot(u_ges, nsteps):
                         init_func=init, blit=True)
     plt.show() 
     return ani
+
+def testPlot(canvas,ax,u_ges, nsteps, q):  #def testPlot(self,canvas,ax):
+    #c = ['r','b','g']  # plot marker colors
+    ax.clear()         # clear axes from previous plot
+    
+    narray = np.ones(nsteps)
+    
+    for h in range(nsteps):
+        narray[h] = h
+        
+    #fig, ax = plt.subplots()
+    plt.title("Regelungsimulation")
+    ax.set_xlabel("Zeit in Sekunden")
+    ax.set_ylabel("Temperatur in °C")
+    
+    #xdata1, ydata1 = narray, u_ges[:q,0]-273.15
+    #xdata2, ydata2 = narray, u_ges[:,3]-273.15
+    #xdata3, ydata3 = narray, u_ges[:,9]-273.15
+    #xdata4, ydata4 = narray, u_ges[:,12]-273.15
+    
+    ln1, = plt.plot(narray[:q], u_ges[:q,0]-273.15, label = "0")#, markersize = 1)
+    ln2, = plt.plot(narray, u_ges[:,3]-273.15, label = "3")#, markersize = 1)
+    ln3, = plt.plot(narray, u_ges[:,9]-273.15, label = "9")#, markersize = 1)
+    ln4, = plt.plot(narray, u_ges[:,12]-273.15, label = "12")#, markersize = 1)  
+    
+    plt.legend()
+    
+    #for i in range(3):
+    #    theta = np.random.uniform(0,360,10)
+    #    r = np.random.uniform(0,1,10)
+    #    ax.plot(theta,r,linestyle="None",marker='o', color=c[i])
+    #    #canvas.draw()
+    
+def savePlot(filename):
+    plt.savefig(filename) 

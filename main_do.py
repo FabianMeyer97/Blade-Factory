@@ -10,9 +10,18 @@ import time
 import Einlesen as e
 #import tkinter as tk
 import datetime
+import os
 
 global slicer, oldslice
 global str_clock, str_T_max, str_a_max, str_a_min, str_wenn_plus, str_wenn_minus
+
+#experimental:
+from write import testPlot, savePlot
+global matplotax
+global matplotcanvas
+global matplotfigure
+###
+    
 
 h = 0.013 #[m]
 dy = 0.001#[m]
@@ -115,42 +124,48 @@ def get_wenn_minus():
 def get_minus():
     return str(np.amax(u_ges_MINUS[slicer:])-273.15)                   
 
-def do_once():
+def do_once(eingegeben):
     global u_ges, alpha_ges, dadt_ges, u, u0
     global u_ges_PLUS, alpha_ges_PLUS, dadt_ges_PLUS, u_PLUS, u0_PLUS 
     global u_ges_MINUS, alpha_ges_MINUS, dadt_ges_MINUS, u_MINUS, u0_MINUS
     global plus#, slicer, oldslice, q
-    global nsteps, dy, dt, dy2, ny, boundary1, boundary2, eingegeben1, stepsprorechnung
+    global nsteps, dy, dt, dy2, ny, boundary1, boundary2, stepsprorechnung #, eingegeben1
     global documentation
     global slicer, oldslice
-    eingegeben1 = e.getTemperature(10)   
-    documentation.append((0,eingegeben1))
+    #eingegeben1 = e.getTemperature(10)   
+    documentation.append((0,eingegeben)) #documentation.append((0,eingegeben1))
     start = time.time()
-    u_ges, alpha_ges, dadt_ges, u, u0 = reg.regelung1(nsteps, dy, dt, dy2, ny, boundary1, boundary2, eingegeben1, stepsprorechnung)
-    u_ges_PLUS, alpha_ges_PLUS, dadt_ges_PLUS, u_PLUS, u0_PLUS = reg.regelung1_PLUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, eingegeben1, stepsprorechnung, plus)
-    u_ges_MINUS, alpha_ges_MINUS, dadt_ges_MINUS, u_MINUS, u0_MINUS = reg.regelung1_MINUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, eingegeben1, stepsprorechnung, plus)
+    u_ges, alpha_ges, dadt_ges, u, u0 = reg.regelung1(nsteps, dy, dt, dy2, ny, boundary1, boundary2, eingegeben, stepsprorechnung) #eingegeben1
+    u_ges_PLUS, alpha_ges_PLUS, dadt_ges_PLUS, u_PLUS, u0_PLUS = reg.regelung1_PLUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, eingegeben, stepsprorechnung, plus) #eingegeben1
+    u_ges_MINUS, alpha_ges_MINUS, dadt_ges_MINUS, u_MINUS, u0_MINUS = reg.regelung1_MINUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, eingegeben, stepsprorechnung, plus) #eingegeben1
     plus = (maxerlaubteTemperatur - np.amax(u_ges))/2
     if plus < 0:
         plus = 0
     print(plus) #Temperaturzuschlag/abzug für Parallelrechnungen
     #write.animatePlot(u_ges[:stepsprorechnung], stepsprorechnung)   
+    global matplotcanvas, matplotax
+    testPlot(matplotax, matplotax,u_ges[:stepsprorechnung], stepsprorechnung, 0)
     slicer = 0
     oldslice = 0
     q = -1
     return q, start, plus
     
+clearConsole = lambda: os.system('cls' if os.name in ('nt', 'dos') else 'clear')
+
 def do_process(q, start, plus, starttime, eingegeben):
+    clearConsole()
     global u_ges, alpha_ges, dadt_ges, u, u0
     global u_ges_PLUS, alpha_ges_PLUS, dadt_ges_PLUS, u_PLUS, u0_PLUS 
     global u_ges_MINUS, alpha_ges_MINUS, dadt_ges_MINUS, u_MINUS, u0_MINUS
     #global plus#, slicer, oldslice, q
-    global nsteps, dy, dt, dy2, ny, boundary1, boundary2, eingegeben1, stepsprorechnung
+    global nsteps, dy, dt, dy2, ny, boundary1, boundary2, stepsprorechnung #, eingegeben1
     global documentation
     global slicer, oldslice
+    global matplotcanvas, matplotax
     q += 1  
     
     endtime = time.time()
-    
+    matplotax.clear()
     if q == 0:
         dif1 = int(endtime-start)
         #dif1 = int(input("Slicer"))
@@ -180,14 +195,19 @@ def do_process(q, start, plus, starttime, eingegeben):
         plus = 0
     print(plus)
     #write.animatePlot(u_ges[:stepsprorechnung+slicer], stepsprorechnung+slicer)    
+    testPlot(matplotax, matplotax,u_ges[:stepsprorechnung+slicer], stepsprorechnung+slicer, q*2)
+    savePlot("regelung-plot.svg")
         
     return q, plus, starttime           
 #write.plot_heatmap2(stepsprorechnung+slicer, dt, u_ges[:stepsprorechnung+slicer])
 
 def end_process():
     global documentation, stepsprorechnung
-    global slicer
+    global slicer, q
     np.savetxt("documentation.csv", documentation)
     write.save(u_ges[:stepsprorechnung+slicer], alpha_ges[:stepsprorechnung+slicer], dadt_ges[:stepsprorechnung+slicer])
-    write.animatePlot(u_ges[:stepsprorechnung+slicer], stepsprorechnung+slicer) 
+    #write.animatePlot(u_ges[:stepsprorechnung+slicer], stepsprorechnung+slicer) 
+    global matplotcanvas, matplotax
+    testPlot(matplotax, matplotax,u_ges[:stepsprorechnung+slicer], stepsprorechnung+slicer, q)
+    savePlot("regelung-plot.svg")
     print(documentation)
