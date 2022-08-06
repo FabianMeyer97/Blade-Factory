@@ -111,37 +111,69 @@ def animatePlot(u_ges, nsteps):
     plt.show() 
     return ani
 
-def testPlot(canvas,ax,u_ges, nsteps, q):  #def testPlot(self,canvas,ax):
+def testPlot(canvas,ax,u_ges, nsteps, q, **kwargs):  #def testPlot(self,canvas,ax):
     #c = ['r','b','g']  # plot marker colors
-    ax.clear()         # clear axes from previous plot
+    narray = np.array([i for i in range(nsteps)])
     
-    narray = np.ones(nsteps)
-    
-    for h in range(nsteps):
-        narray[h] = h
+    if "update" in kwargs:
+        lns=kwargs["update"]
+
+        lns[0].set_xdata(narray[:q])
+        lns[1].set_xdata(narray)
+        lns[2].set_xdata(narray)
+        lns[3].set_xdata(narray)
+        lns[4].set_xdata(q)
+        lns[4].set_label(f"{q} sec since start")
+        #fm = plt.get_current_fig_manager()
+        #fm.toolbar.actions()[0].triggered.connect(home_callback)
+        ax.legend()
         
-    #fig, ax = plt.subplots()
-    plt.title("Regelungsimulation")
-    ax.set_xlabel("Zeit in Sekunden")
-    ax.set_ylabel("Temperatur in °C")
-    
-    #xdata1, ydata1 = narray, u_ges[:q,0]-273.15
-    #xdata2, ydata2 = narray, u_ges[:,3]-273.15
-    #xdata3, ydata3 = narray, u_ges[:,9]-273.15
-    #xdata4, ydata4 = narray, u_ges[:,12]-273.15
-    
-    ln1, = plt.plot(narray[:q], u_ges[:q,0]-273.15, label = "0")#, markersize = 1)
-    ln2, = plt.plot(narray, u_ges[:,3]-273.15, label = "3")#, markersize = 1)
-    ln3, = plt.plot(narray, u_ges[:,9]-273.15, label = "9")#, markersize = 1)
-    ln4, = plt.plot(narray, u_ges[:,12]-273.15, label = "12")#, markersize = 1)  
-    
-    plt.legend()
-    
-    #for i in range(3):
-    #    theta = np.random.uniform(0,360,10)
-    #    r = np.random.uniform(0,1,10)
-    #    ax.plot(theta,r,linestyle="None",marker='o', color=c[i])
-    #    #canvas.draw()
+        lns[0].set_ydata(u_ges[:q,0]-273.15)
+        lns[1].set_ydata(u_ges[:,3]-273.15)
+        lns[2].set_ydata(u_ges[:,9]-273.15)
+        lns[3].set_ydata(u_ges[:,12]-273.15)
+        
+        
+        #redraw plot
+        ax = plt.gca()
+        ax.relim()
+        ax.autoscale_view()
+         
+        figure = plt.gcf()
+        #figure.canvas.draw_idle() 
+        figure.canvas.draw()
+        #figure.canvas.flush_events()
+        #plt.pause(0.05)
+        return lns
+    else:
+        ax.clear()   
+            
+        #fig, ax = plt.subplots()
+        plt.title("Regelungsimulation")
+        #ax.set_xlabel("Zeit in Sekunden")
+        #ax.set_ylabel("Temperatur in °C")
+        plt.xlabel("time",fontsize=18)
+        plt.ylabel("$T$ in °C",fontsize=18)    
+        
+        ln1, = plt.plot(narray[:q], u_ges[:q,0]-273.15, label = "0 mm")#, markersize = 1)
+        ln2, = plt.plot(narray, u_ges[:,3]-273.15, label = "3 mm")#, markersize = 1)
+        #ln5, = plt.plot(narray, u_ges[:,6]-273.15, label = "6")#, markersize = 1)
+        ln3, = plt.plot(narray, u_ges[:,9]-273.15, label = "9 mm")#, markersize = 1)
+        ln4, = plt.plot(narray, u_ges[:,12]-273.15, label = "12 mm")#, markersize = 1)  
+        vln = plt.axvline(x=q, color='black', linestyle='--', label='now')
+        print("size of uges")
+        print(u_ges.size)
+        #time.sleep(6)
+        print("size of uges reported")
+        
+        plt.legend()
+        
+        #for i in range(3):
+        #    theta = np.random.uniform(0,360,10)
+        #    r = np.random.uniform(0,1,10)
+        #    ax.plot(theta,r,linestyle="None",marker='o', color=c[i])
+        #    #canvas.draw()
+        return[ln1,ln2,ln3,ln4, vln]
     
 def savePlot(filename):
     plt.savefig(filename) 

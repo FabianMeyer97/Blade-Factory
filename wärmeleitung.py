@@ -10,8 +10,8 @@ switchH = False
 
 #Initiate Arrays, starting temperatur and starting BC for the temperature arrays
 def uArrays(ny, nsteps):
-    u_init = 23
-    u_left = 40
+    u_init = 39 #23
+    u_left = 41
     u0 = u_init * np.ones(ny)
     u0[0] = u_left
     u = u0.copy()
@@ -83,7 +83,7 @@ def interfaceBoundary2(aa_schicht, aa_balsa, u0, boundary2):
 #a heat dissipation in air
 
 def robinBoundary(ny, k_comp, dy, u, u0, density_schicht, cp_comp):
-    T_out = 23
+    T_out = 25.2 # 23
     #The switch controls wether the heat dissipation coefficient gets calculated or is a 
     #fixed value. Switch can be turned on and off while the main program loop is running
     if switchH == False:
