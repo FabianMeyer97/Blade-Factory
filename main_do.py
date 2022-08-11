@@ -29,11 +29,11 @@ dt = 1
 ny = int(h/dy)
 dy2 = dy*dy
 #Hier boundaries eingeben [in mm]:
-boundary1 = int(7)
-boundary2 = int((6.5+31.5))
-nsteps1 = Sekunden =  int(10*60*60)
-stepsprorechnung = int(1200)
-nsteps = int(Sekunden/dt)
+boundary1 = None #int(7)
+boundary2 = None #int((6.5+31.5))
+nsteps1 = Sekunden =  int(10*60*60) # 10 hours
+stepsprorechnung = int(1200) # 1200 sec = 20 min
+nsteps = int(Sekunden/dt) # maximal duration for experiment ; 10 hours should be enough
 
 maxerlaubteTemperatur = 80+273.15 #40 +273.15
 
@@ -43,6 +43,13 @@ documentation = []
 np.array(documentation)
 
 plotlines=None
+
+starttime_prefix = None
+layer_composition = None
+
+k_core = None  #0.06 #0.06-0.0935
+density_core = None  #140
+c_core = None  #2720  
 
 # def update_clock():
 #     # get current time as text
@@ -142,7 +149,11 @@ def set_wenn_plus():
     global plus, u_ges_PLUS, slicer
     global str_wenn_plus
     result = np.where(u_ges_PLUS == np.amax(u_ges_PLUS[slicer:]))
-    str_wenn_plus = "after " + str(result[0][0]) + " sec, at " + str(result[1][0]) + " mm."
+    if len(result[0]!=1) or len(result[1]!=1):
+        str_wenn_plus = ":: after " + str(result[0]) + " sec, at " + str(result[1]) + " mm."
+    else:
+        #####str_wenn_plus = "after " + str(result[0][0]) + " sec, at " + str(result[1][0]) + " mm."
+        str_wenn_plus = ":: after " + str(result[0]) + " sec, at " + str(result[1]) + " mm."
 
 def get_wenn_plus():
     global str_wenn_plus
@@ -152,7 +163,10 @@ def set_wenn_minus():
     global plus, u_ges_MINUS, slicer
     global str_wenn_minus
     result = np.where(u_ges_MINUS == np.amax(u_ges_MINUS[slicer:]))
-    str_wenn_minus = "after " + str(result[0][0]) + " sec, at " + str(result[1][0]) + " mm."
+    if len(result[0]!=1) or len(result[1]!=1):
+        str_wenn_minus = ":: after " + str(result[0]) + " sec, at " + str(result[1]) + " mm."
+    else:
+        str_wenn_minus = "after " + str(result[0][0]) + " sec, at " + str(result[1][0]) + " mm."
 
 def get_wenn_minus():
     global str_wenn_minus
@@ -170,12 +184,13 @@ def do_once(eingegeben):
     global documentation
     global slicer, oldslice
     global plotlines
+    global starttime_prefix, layer_composition
     #eingegeben1 = e.getTemperature(10)   
     documentation.append((0,eingegeben)) #documentation.append((0,eingegeben1))
     start = time.time()
-    u_ges, alpha_ges, dadt_ges, u, u0 = reg.regelung1(nsteps, dy, dt, dy2, ny, boundary1, boundary2, eingegeben, stepsprorechnung) #eingegeben1
-    u_ges_PLUS, alpha_ges_PLUS, dadt_ges_PLUS, u_PLUS, u0_PLUS = reg.regelung1_PLUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, eingegeben, stepsprorechnung, plus) #eingegeben1
-    u_ges_MINUS, alpha_ges_MINUS, dadt_ges_MINUS, u_MINUS, u0_MINUS = reg.regelung1_MINUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, eingegeben, stepsprorechnung, plus) #eingegeben1
+    u_ges, alpha_ges, dadt_ges, u, u0 = reg.regelung1(nsteps, dy, dt, dy2, ny, boundary1, boundary2, eingegeben, stepsprorechnung, prefix=f"{starttime_prefix}_", layers=layer_composition) #eingegeben1
+    u_ges_PLUS, alpha_ges_PLUS, dadt_ges_PLUS, u_PLUS, u0_PLUS = reg.regelung1_PLUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, eingegeben, stepsprorechnung, plus, prefix=f"{starttime_prefix}_", layers=layer_composition) #eingegeben1
+    u_ges_MINUS, alpha_ges_MINUS, dadt_ges_MINUS, u_MINUS, u0_MINUS = reg.regelung1_MINUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, eingegeben, stepsprorechnung, plus, prefix=f"{starttime_prefix}_", layers=layer_composition) #eingegeben1
     plus = (maxerlaubteTemperatur - np.amax(u_ges))/2
     if plus < 0:
         plus = 0
@@ -202,6 +217,7 @@ def do_process(q, start, starttime, eingegeben): #, plus
     global slicer, oldslice
     global matplotcanvas, matplotax
     global plotlines, matplotfigure
+    global starttime_prefix, layer_composition
     q += 1  
     
     
@@ -227,13 +243,13 @@ def do_process(q, start, starttime, eingegeben): #, plus
     
     #print(plus)
     
-    u_ges, alpha_ges, dadt_ges, u, u0 = reg.regelung2(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben, slicer, stepsprorechnung, oldslice)
+    u_ges, alpha_ges, dadt_ges, u, u0 = reg.regelung2(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben, slicer, stepsprorechnung, oldslice, prefix=f"{starttime_prefix}_", layers=layer_composition)
     set_a_max()
     set_a_min()
     #set_max_alpha()
-    u_ges_PLUS, alpha_ges_PLUS, dadt_ges_PLUS, u_PLUS, u0_PLUS = reg.regelung2_PLUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben,slicer, stepsprorechnung, oldslice, plus)
+    u_ges_PLUS, alpha_ges_PLUS, dadt_ges_PLUS, u_PLUS, u0_PLUS = reg.regelung2_PLUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben,slicer, stepsprorechnung, oldslice, plus, prefix=f"{starttime_prefix}_", layers=layer_composition)
     set_wenn_plus()
-    u_ges_MINUS, alpha_ges_MINUS, dadt_ges_MINUS, u_MINUS, u0_MINUS = reg.regelung2_MINUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben,slicer, stepsprorechnung, oldslice, plus)
+    u_ges_MINUS, alpha_ges_MINUS, dadt_ges_MINUS, u_MINUS, u0_MINUS = reg.regelung2_MINUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben,slicer, stepsprorechnung, oldslice, plus, prefix=f"{starttime_prefix}_", layers=layer_composition)
     set_clock()
     set_T_max()
     set_wenn_minus()
@@ -255,10 +271,11 @@ def do_process(q, start, starttime, eingegeben): #, plus
 def end_process():
     global documentation, stepsprorechnung
     global slicer, q
-    np.savetxt("documentation.csv", documentation)
-    write.save(u_ges[:stepsprorechnung+slicer], alpha_ges[:stepsprorechnung+slicer], dadt_ges[:stepsprorechnung+slicer])
+    global starttime_prefix, layer_composition
+    np.savetxt(f"{starttime_prefix}_documentation.csv", documentation)
+    write.save(u_ges[:stepsprorechnung+slicer], alpha_ges[:stepsprorechnung+slicer], dadt_ges[:stepsprorechnung+slicer], prefix=f"{starttime_prefix}_")
     #write.animatePlot(u_ges[:stepsprorechnung+slicer], stepsprorechnung+slicer) 
     global matplotcanvas, matplotax
     testPlot(matplotax, matplotax,u_ges[:stepsprorechnung+slicer], stepsprorechnung+slicer, slicer)
-    savePlot("regelung-plot.svg")
+    savePlot(f"{starttime_prefix}_regelung-plot.svg")
     print(documentation)

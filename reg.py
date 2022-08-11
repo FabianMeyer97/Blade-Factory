@@ -46,7 +46,16 @@ def setVal(ny, nsteps, dt, dy2 ):
 def timestep_lam(u0, u, u_ges, u_left, a_balsa, aa_balsa, k1, k2, 
             alpha, alpha0, dadt, dadt0, alpha_ges, dadt_ges, reak_kinetic_ges, 
             density_schicht, c_schicht, k_schicht, phi, 
-            density_M, h_luft_ges, nsteps, dy, dt, dy2, ny, boundary1, boundary2):
+            density_M, h_luft_ges, nsteps, dy, dt, dy2, ny, boundary1, boundary2, **kwargs):
+    if "mat_layers" in kwargs:
+        mat_layers=kwargs["mat_layers"]
+    else:
+        mat_layers="default"
+        print("layer composition not defined, default value is used")
+        print(mat_layers)
+        raise ValueError('please define layer composition', 'x', 'y')
+        
+    #print(mat_layers)
         
     a_schicht, aa_schicht, density_schicht, k_comp, cp_comp = m.calcSchichtT(ny, alpha, u, dt, dy2)
         
@@ -56,21 +65,28 @@ def timestep_lam(u0, u, u_ges, u_left, a_balsa, aa_balsa, k1, k2,
     #advanced Kamal-Souror method
     reak_kinetic, alpha, dadt, Tg = r.calcReaktionskinetik_135(ny, dt,  phi, density_M, 
                          density_schicht, u0, u, 1, -1, nsteps, alpha0, dadt0)  
-    #interface boundaries
-    #u0[boundary1] = w.interfaceBoundary1(aa_schicht, aa_balsa, u0, boundary1)   
-    #u0[boundary2] = w.interfaceBoundary2(aa_schicht, aa_balsa, u0, boundary2)     
-    #u = w.calcU1(u, u0, aa_schicht, 1, boundary1+1) 
-    #u[1 : boundary1] += reak_kinetic[1 : boundary1]
-    #u = w.calcU2(u, u0, aa_balsa, boundary1+1, boundary2+1) 
-    #u = w.calcU3(u, u0, aa_schicht, boundary2+1, -1)
-    #u[boundary2+1:-1] += reak_kinetic[boundary2+1:-1]
+    
+    if mat_layers not in ['only fibre layers','with balsa core', 'with foam core', 'default']:
+        print("mat_layers not permitted")
+        raise ValueError('mat_layers not permitted', 'x', 'y')
+    
+    if mat_layers in ['with balsa core','with foam core']:
+        #interface boundaries are needed
+        u0[boundary1] = w.interfaceBoundary1(aa_schicht, aa_balsa, u0, boundary1)   
+        u0[boundary2] = w.interfaceBoundary2(aa_schicht, aa_balsa, u0, boundary2)     
+        u = w.calcU1(u, u0, aa_schicht, 1, boundary1+1) 
+        u[1 : boundary1] += reak_kinetic[1 : boundary1]
+        u = w.calcU2(u, u0, aa_balsa, boundary1+1, boundary2+1) 
+        u = w.calcU3(u, u0, aa_schicht, boundary2+1, -1)
+        u[boundary2+1:-1] += reak_kinetic[boundary2+1:-1]
 
 
     u, h_luft = w.robinBoundary(ny, k_comp, dy, u, u0, density_schicht, cp_comp)
     
-    # without interface boundaries
-    u[1 : -1] += reak_kinetic[1 : -1]
-    u = w.calcU(u, u0, aa_schicht, 1, -1) 
+    if mat_layers in ['only fibre layers', 'default']:
+        # without interface boundaries
+        u[1 : -1] += reak_kinetic[1 : -1]
+        u = w.calcU(u, u0, aa_schicht, 1, -1) 
     
     reak_kinetic_ges[-1] = reak_kinetic
     h_luft_ges[-1] = h_luft  
@@ -83,6 +99,16 @@ def regelung1(nsteps, dy, dt, dy2, ny, boundary1, boundary2, eingeben1, stepspro
         do_write=kwargs["write"]
     else:
         do_write=True
+    
+    if "prefix" in kwargs:
+        prefix=kwargs["prefix"]
+    else:
+        prefix=""
+        
+    if "layers" in kwargs:
+        mat_layers=kwargs["layers"]
+    else:
+        mat_layers="default"
     
     (u0, u, u_ges, u_left, a_balsa, aa_balsa, u0, u, u_ges, k1, k2, 
      alpha, alpha0, dadt, dadt0, alpha_ges, dadt_ges, reak_kinetic_ges, 
@@ -102,7 +128,7 @@ def regelung1(nsteps, dy, dt, dy2, ny, boundary1, boundary2, eingeben1, stepspro
         u_ges, u0, u, alpha_ges, dadt_ges, reak_kinetic_ges, h_luft_ges, alpha, dadt = timestep_lam(u0, u, u_ges, u_left, a_balsa, aa_balsa, k1, k2, 
             alpha, alpha0, dadt, dadt0, alpha_ges, dadt_ges, reak_kinetic_ges, 
             density_schicht, c_schicht, k_schicht, phi, 
-            density_M, h_luft_ges, nsteps, dy, dt, dy2, ny, boundary1, boundary2)
+            density_M, h_luft_ges, nsteps, dy, dt, dy2, ny, boundary1, boundary2, mat_layers=mat_layers)
       
         u_ges[i] = u
         alpha_ges[i] = alpha
@@ -112,7 +138,7 @@ def regelung1(nsteps, dy, dt, dy2, ny, boundary1, boundary2, eingeben1, stepspro
     dadt_ges_write = np.copy(dadt_ges[:stepsprorechnung])
     alpha_ges_write = np.copy(alpha_ges[:stepsprorechnung]) 
     if do_write:
-        write.save(u_ges_write, alpha_ges_write, dadt_ges_write)
+        write.save(u_ges_write, alpha_ges_write, dadt_ges_write, prefix=prefix)
     
     #write.plot_heatmap2(nsteps, dt, u_ges[:nsteps])
     #print("Maximale vorkommende Temperatur: "+ str(np.amax(u_ges[:stepsprorechnung])-273.15) + " °C nach " + str(np.argmax(u_ges, axis=0)) + " Sekunden, nach " + str(np.argmax(u_ges, axis=1)) + " mm." )
@@ -131,14 +157,23 @@ def regelung2(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben,slice
         do_write=kwargs["write"]
     else:
         do_write=True
-   
+    
+    if "prefix" in kwargs:
+        prefix=kwargs["prefix"]
+    else:
+        prefix=""   
+        
+    if "layers" in kwargs:
+        mat_layers=kwargs["layers"]
+    else:
+        mat_layers="default"
     
     (u0, u, u_ges, u_left, a_balsa, aa_balsa, u0, u, u_ges, k1, k2, 
      alpha, alpha0, dadt, dadt0, alpha_ges, dadt_ges, reak_kinetic_ges, 
      density_schicht, c_schicht, k_schicht
      , phi, density_M, h_luft_ges) = setVal(ny, nsteps, dt, dy2 )
     
-    u_ges_read, alpha_ges_read, dadt_ges_read = write.read()
+    u_ges_read, alpha_ges_read, dadt_ges_read = write.read(prefix=prefix)
     #print(u_ges_read.shape)
     if "u_ges" in kwargs:
         u_ges_read=kwargs["u_ges"]
@@ -176,7 +211,7 @@ def regelung2(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben,slice
         u_ges, u0, u, alpha_ges, dadt_ges, reak_kinetic_ges, h_luft_ges, alpha, dadt = timestep_lam(u0, u, u_ges, u_left, a_balsa, aa_balsa, k1, k2, 
             alpha, alpha0, dadt, dadt0, alpha_ges, dadt_ges, reak_kinetic_ges, 
             density_schicht, c_schicht, k_schicht, phi, 
-            density_M, h_luft_ges, nsteps, dy, dt, dy2, ny, boundary1, boundary2)
+            density_M, h_luft_ges, nsteps, dy, dt, dy2, ny, boundary1, boundary2, mat_layers=mat_layers)
       
         u_ges[i] = u  
         alpha_ges[i] = alpha
@@ -196,7 +231,7 @@ def regelung2(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben,slice
     alpha_ges_write = np.copy(alpha_ges[:stepsprorechnung+slicer])
     
     if do_write:
-        write.save(u_ges_write, alpha_ges_write, dadt_ges_write)
+        write.save(u_ges_write, alpha_ges_write, dadt_ges_write, prefix=prefix)
     print("α_max: " + str(np.amax(alpha_ges[slicer])) + "\nα_min: " + str(np.amin(alpha_ges[slicer])))
     #Wann wird minimaler Alpha überall erreicht?:
     MinAlpha = np.amin(alpha_ges[slicer:])#, stepsprorechnung+slicer])
@@ -217,7 +252,16 @@ def regelung1_PLUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, eingeben1, ste
         do_write=kwargs["write"]
     else:
         do_write=True
+    
+    if "prefix" in kwargs:
+        prefix=kwargs["prefix"]
+    else:
+        prefix="" 
    
+    if "layers" in kwargs:
+        mat_layers=kwargs["layers"]
+    else:
+        mat_layers="default"
     
     (u0_PLUS, u_PLUS, u_ges_PLUS, u_left_PLUS, a_balsa, aa_balsa, u0_PLUS, u_PLUS, u_ges_PLUS, k1, k2, 
      alpha_PLUS, alpha0_PLUS, dadt_PLUS, dadt0_PLUS, alpha_ges_PLUS, dadt_ges_PLUS, reak_kinetic_ges_PLUS, 
@@ -237,7 +281,7 @@ def regelung1_PLUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, eingeben1, ste
         u_ges_PLUS, u0_PLUS, u_PLUS, alpha_ges_PLUS, dadt_ges_PLUS, reak_kinetic_ges_PLUS, h_luft_ges_PLUS, alpha_PLUS, dadt_PLUS = timestep_lam(u0_PLUS, u_PLUS, u_ges_PLUS, u_left_PLUS, a_balsa, aa_balsa, k1, k2, 
             alpha_PLUS, alpha0_PLUS, dadt_PLUS, dadt0_PLUS, alpha_ges_PLUS, dadt_ges_PLUS, reak_kinetic_ges_PLUS, 
             density_schicht, c_schicht, k_schicht, phi, 
-            density_M, h_luft_ges_PLUS, nsteps, dy, dt, dy2, ny, boundary1, boundary2)
+            density_M, h_luft_ges_PLUS, nsteps, dy, dt, dy2, ny, boundary1, boundary2, mat_layers=mat_layers)
       
         u_ges_PLUS[i] = u_PLUS
         alpha_ges_PLUS[i] = alpha_PLUS
@@ -247,7 +291,7 @@ def regelung1_PLUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, eingeben1, ste
     dadt_ges_PLUS_write = np.copy(dadt_ges_PLUS[:stepsprorechnung])
     alpha_ges_PLUS_write = np.copy(alpha_ges_PLUS[:stepsprorechnung]) 
     if do_write:
-        write.save_PLUS(u_ges_PLUS_write, alpha_ges_PLUS_write, dadt_ges_PLUS_write)
+        write.save_PLUS(u_ges_PLUS_write, alpha_ges_PLUS_write, dadt_ges_PLUS_write, prefix=prefix)
     
     result = np.where(u_ges_PLUS == np.amax(u_ges_PLUS[:stepsprorechnung]))
     """
@@ -266,7 +310,16 @@ def regelung1_MINUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, eingeben1, st
         do_write=kwargs["write"]
     else:
         do_write=True
+    
+    if "prefix" in kwargs:
+        prefix=kwargs["prefix"]
+    else:
+        prefix="" 
    
+    if "layers" in kwargs:
+        mat_layers=kwargs["layers"]
+    else:
+        mat_layers="default"
     
     (u0_MINUS, u_MINUS, u_ges_MINUS, u_left_MINUS, a_balsa, aa_balsa, u0_MINUS, u_MINUS, u_ges_MINUS, k1, k2, 
      alpha_MINUS, alpha0_MINUS, dadt_MINUS, dadt0_MINUS, alpha_ges_MINUS, dadt_ges_MINUS, reak_kinetic_ges_MINUS, 
@@ -286,7 +339,7 @@ def regelung1_MINUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, eingeben1, st
         u_ges_MINUS, u0_MINUS, u_MINUS, alpha_ges_MINUS, dadt_ges_MINUS, reak_kinetic_ges_MINUS, h_luft_ges_MINUS, alpha_MINUS, dadt_MINUS = timestep_lam(u0_MINUS, u_MINUS, u_ges_MINUS, u_left_MINUS, a_balsa, aa_balsa, k1, k2, 
             alpha_MINUS, alpha0_MINUS, dadt_MINUS, dadt0_MINUS, alpha_ges_MINUS, dadt_ges_MINUS, reak_kinetic_ges_MINUS, 
             density_schicht, c_schicht, k_schicht, phi, 
-            density_M, h_luft_ges_MINUS, nsteps, dy, dt, dy2, ny, boundary1, boundary2)
+            density_M, h_luft_ges_MINUS, nsteps, dy, dt, dy2, ny, boundary1, boundary2, mat_layers=mat_layers)
       
         u_ges_MINUS[i] = u_MINUS
         alpha_ges_MINUS[i] = alpha_MINUS
@@ -296,7 +349,7 @@ def regelung1_MINUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, eingeben1, st
     dadt_ges_MINUS_write = np.copy(dadt_ges_MINUS[:stepsprorechnung])
     alpha_ges_MINUS_write = np.copy(alpha_ges_MINUS[:stepsprorechnung]) 
     if do_write:
-        write.save_MINUS(u_ges_MINUS_write, alpha_ges_MINUS_write, dadt_ges_MINUS_write)
+        write.save_MINUS(u_ges_MINUS_write, alpha_ges_MINUS_write, dadt_ges_MINUS_write, prefix=prefix)
     
     result = np.where(u_ges_MINUS == np.amax(u_ges_MINUS[:stepsprorechnung]))
     """
@@ -315,14 +368,23 @@ def regelung2_PLUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben,
         do_write=kwargs["write"]
     else:
         do_write=True
+    
+    if "prefix" in kwargs:
+        prefix=kwargs["prefix"]
+    else:
+        prefix="" 
    
+    if "layers" in kwargs:
+        mat_layers=kwargs["layers"]
+    else:
+        mat_layers="default"
     
     (u0_PLUS, u_PLUS, u_ges_PLUS, u_left_PLUS, a_balsa, aa_balsa, u0_PLUS, u_PLUS, u_ges_PLUS, k1, k2, 
      alpha_PLUS, alpha0_PLUS, dadt_PLUS, dadt0_PLUS, alpha_ges_PLUS, dadt_ges_PLUS, reak_kinetic_ges_PLUS, 
      density_schicht, c_schicht, k_schicht
      , phi, density_M, h_luft_ges_PLUS) = setVal(ny, nsteps, dt, dy2) 
     
-    u_ges_PLUS_read, alpha_ges_PLUS_read, dadt_ges_PLUS_read = write.read_PLUS()
+    u_ges_PLUS_read, alpha_ges_PLUS_read, dadt_ges_PLUS_read = write.read_PLUS(prefix=prefix)
     if "u_ges_PLUS" in kwargs:
         u_ges_PLUS_read=kwargs["u_ges_PLUS"]
     if "alpha_ges_PLUS" in kwargs:
@@ -358,7 +420,7 @@ def regelung2_PLUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben,
         u_ges_PLUS, u0_PLUS, u_PLUS, alpha_ges_PLUS, dadt_ges_PLUS, reak_kinetic_ges_PLUS, h_luft_ges_PLUS, alpha_PLUS, dadt_PLUS = timestep_lam(u0_PLUS, u_PLUS, u_ges_PLUS, u_left_PLUS, a_balsa, aa_balsa, k1, k2, 
             alpha_PLUS, alpha0_PLUS, dadt_PLUS, dadt0_PLUS, alpha_ges_PLUS, dadt_ges_PLUS, reak_kinetic_ges_PLUS, 
             density_schicht, c_schicht, k_schicht, phi, 
-            density_M, h_luft_ges_PLUS, nsteps, dy, dt, dy2, ny, boundary1, boundary2)
+            density_M, h_luft_ges_PLUS, nsteps, dy, dt, dy2, ny, boundary1, boundary2, mat_layers=mat_layers)
       
         u_ges_PLUS[i] = u_PLUS
         
@@ -375,7 +437,7 @@ def regelung2_PLUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben,
     alpha_ges_PLUS_write = np.copy(alpha_ges_PLUS[:stepsprorechnung+slicer])
 
     if do_write:
-        write.save_PLUS(u_ges_PLUS_write, alpha_ges_PLUS_write, dadt_ges_PLUS_write)
+        write.save_PLUS(u_ges_PLUS_write, alpha_ges_PLUS_write, dadt_ges_PLUS_write, prefix=prefix)
 
     
     result = np.where(u_ges_PLUS == np.amax(u_ges_PLUS[slicer:]))
@@ -392,14 +454,23 @@ def regelung2_MINUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben
         do_write=kwargs["write"]
     else:
         do_write=True
+    
+    if "prefix" in kwargs:
+        prefix=kwargs["prefix"]
+    else:
+        prefix="" 
    
+    if "layers" in kwargs:
+        mat_layers=kwargs["layers"]
+    else:
+        mat_layers="default"
     
     (u0_MINUS, u_MINUS, u_ges_MINUS, u_left_MINUS, a_balsa, aa_balsa, u0_MINUS, u_MINUS, u_ges_MINUS, k1, k2, 
      alpha_MINUS, alpha0_MINUS, dadt_MINUS, dadt0_MINUS, alpha_ges_MINUS, dadt_ges_MINUS, reak_kinetic_ges_MINUS, 
      density_schicht, c_schicht, k_schicht
      , phi, density_M, h_luft_ges_MINUS) = setVal(ny, nsteps, dt, dy2) 
     
-    u_ges_MINUS_read, alpha_ges_MINUS_read, dadt_ges_MINUS_read = write.read_MINUS()
+    u_ges_MINUS_read, alpha_ges_MINUS_read, dadt_ges_MINUS_read = write.read_MINUS(prefix=prefix)
     if "u_ges_MINUS" in kwargs:
         u_ges_MINUS_read=kwargs["u_ges_MINUS"]
     if "alpha_ges_MINUS" in kwargs:
@@ -435,7 +506,7 @@ def regelung2_MINUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben
         u_ges_MINUS, u0_MINUS, u_MINUS, alpha_ges_MINUS, dadt_ges_MINUS, reak_kinetic_ges_MINUS, h_luft_ges_MINUS, alpha_MINUS, dadt_MINUS = timestep_lam(u0_MINUS, u_MINUS, u_ges_MINUS, u_left_MINUS, a_balsa, aa_balsa, k1, k2, 
             alpha_MINUS, alpha0_MINUS, dadt_MINUS, dadt0_MINUS, alpha_ges_MINUS, dadt_ges_MINUS, reak_kinetic_ges_MINUS, 
             density_schicht, c_schicht, k_schicht, phi, 
-            density_M, h_luft_ges_MINUS, nsteps, dy, dt, dy2, ny, boundary1, boundary2)
+            density_M, h_luft_ges_MINUS, nsteps, dy, dt, dy2, ny, boundary1, boundary2, mat_layers=mat_layers)
       
         u_ges_MINUS[i] = u_MINUS
         
@@ -451,7 +522,7 @@ def regelung2_MINUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben
     dadt_ges_MINUS_write = np.copy(dadt_ges_MINUS[:stepsprorechnung+slicer])
     alpha_ges_MINUS_write = np.copy(alpha_ges_MINUS[:stepsprorechnung+slicer]) 
     if do_write:
-        write.save_MINUS(u_ges_MINUS_write, alpha_ges_MINUS_write, dadt_ges_MINUS_write)
+        write.save_MINUS(u_ges_MINUS_write, alpha_ges_MINUS_write, dadt_ges_MINUS_write, prefix=prefix)
 
     result = np.where(u_ges_MINUS == np.amax(u_ges_MINUS[slicer:]))
 

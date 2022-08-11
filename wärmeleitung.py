@@ -8,10 +8,18 @@ import materialparameter as m
 #if it's True the HTC is adjusted to match a "fleece" on the object
 switchH = False
 
+# temperature of environment ("air")
+T_out = 23.1 #None
+# starting temperature for temperature arrays
+u_init = 39 #None #39
+# starting boundary condition for temperature arrays
+u_left = None #41 #never really used?? is overwritten in reg.py regelung1, regelung2,... (eingeben1 and eingegeben, i.e entered/measured value)
+
 #Initiate Arrays, starting temperatur and starting BC for the temperature arrays
 def uArrays(ny, nsteps):
-    u_init = 39 #23
-    u_left = 41
+    global u_init, u_left
+    #u_init = 39 #23
+    #u_left = 41
     u0 = u_init * np.ones(ny)
     u0[0] = u_left
     u = u0.copy()
@@ -83,7 +91,7 @@ def interfaceBoundary2(aa_schicht, aa_balsa, u0, boundary2):
 #a heat dissipation in air
 
 def robinBoundary(ny, k_comp, dy, u, u0, density_schicht, cp_comp):
-    T_out = 25.2 # 23
+    global T_out #T_out = 25.2 # 23
     #The switch controls wether the heat dissipation coefficient gets calculated or is a 
     #fixed value. Switch can be turned on and off while the main program loop is running
     if switchH == False:

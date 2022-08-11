@@ -14,9 +14,9 @@ def parameterMatrix():   #Parameter von Epoxy Resin
 #Paramter AirrexC70:
 def parameterAirrexC70(): #keine Temperaturabhängigkeit
     
-    density_A = 40-250 #RANGE LAUT DATENBLATT
+    density_A = 80 #40-250 #RANGE LAUT DATENBLATT
     c_A= 1200 #SCHÄTZWERT
-    k_A = 0.031-0.056 #RANGE LAUT DATENBLATT
+    k_A = 0.031 #0.031-0.056 #RANGE LAUT DATENBLATT
     
     return density_A, c_A, k_A
 
@@ -36,6 +36,13 @@ def parameterBalsa():
     density_balsa = 140
     c_balsa = 2720   
     return k_balsa, density_balsa, c_balsa
+
+
+def parameterFlex(k,density, c):  
+    #k_balsa = 0.06 #0.06-0.0935
+    #density_balsa = 140
+    #c_balsa = 2720   
+    return k, density, c
 
 #Calculated a GFRP laminate based on the parameters given above, with no temperature dependency
 def calcVerbund():
@@ -128,7 +135,13 @@ def hSchicht(density_schicht, cp_comp, k_comp, u, Text):
     
     RaL = GrL * Pr #Rayleigh number 
     #h_luft = (k_comp[-1]/L) * 0.27 * RaL**(1/4)
-    h_luft = (0.02289/QuadSize) * 0.27 * RaL**(1/4)  #heat transfer coefficient 
+    try:
+        h_luft = (0.02289/QuadSize) * 0.27 * RaL**(1/4)  #heat transfer coefficient 
+    except: # IndexError:
+        print("Error in hSchicht; h_luft: QuadSize="+Quadsize+", RaL="+RaL+", ap="+ap+",Pr="+Pr+",GrL:"+GrL)
+        h_luft = (0.02289/QuadSize) * 0.27 * RaL**(1/4)  #heat transfer coefficient 
+        #h_luft=20
+        
     #h_luft = 20
     return h_luft
 

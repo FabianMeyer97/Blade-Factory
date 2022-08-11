@@ -7,39 +7,66 @@ import numpy as np
 import pylab
 import time
 
+starttime_prefix = None
+
 #Save the temperature, alpha and dadt data as .csv-files
-def save(u_ges_write, alpha_ges_write, dadt_ges_write):    
-    np.savetxt("u_ges.csv", u_ges_write, delimiter = ",")
-    np.savetxt("alpha_ges.csv", alpha_ges_write, delimiter = ",")
-    np.savetxt("dadt_ges.csv", dadt_ges_write, delimiter = ",")
+def save(u_ges_write, alpha_ges_write, dadt_ges_write, **kwargs): 
+    if "prefix" in kwargs:
+        prefix=kwargs["prefix"]
+    else:
+        prefix=""
+    np.savetxt(f"{prefix}u_ges.csv", u_ges_write, delimiter = ",")  #f"({main_do.get_a_min():.2%}, {main_do.get_a_max():.2%})"
+    np.savetxt(f"{prefix}alpha_ges.csv", alpha_ges_write, delimiter = ",")
+    np.savetxt(f"{prefix}dadt_ges.csv", dadt_ges_write, delimiter = ",")
     
-def save_PLUS(u_ges_PLUS_write, alpha_ges_PLUS_write, dadt_ges_PLUS_write):
-    np.savetxt("u_ges_PLUS.csv", u_ges_PLUS_write, delimiter = ",")
-    np.savetxt("alpha_ges_PLUS.csv", alpha_ges_PLUS_write, delimiter = ",")
-    np.savetxt("dadt_ges_PLUS.csv", dadt_ges_PLUS_write, delimiter = ",")
+def save_PLUS(u_ges_PLUS_write, alpha_ges_PLUS_write, dadt_ges_PLUS_write, **kwargs):
+    if "prefix" in kwargs:
+        prefix=kwargs["prefix"]
+    else:
+        prefix=""
+        
+    np.savetxt(f"{prefix}u_ges_PLUS.csv", u_ges_PLUS_write, delimiter = ",")
+    np.savetxt(f"{prefix}alpha_ges_PLUS.csv", alpha_ges_PLUS_write, delimiter = ",")
+    np.savetxt(f"{prefix}dadt_ges_PLUS.csv", dadt_ges_PLUS_write, delimiter = ",")
  
-def save_MINUS(u_ges_MINUS_write, alpha_ges_MINUS_write, dadt_ges_MINUS_write):
-    np.savetxt("u_ges_MINUS.csv", u_ges_MINUS_write, delimiter = ",")
-    np.savetxt("alpha_ges_MINUS.csv", alpha_ges_MINUS_write, delimiter = ",")
-    np.savetxt("dadt_ges_MINUS.csv", dadt_ges_MINUS_write, delimiter = ",")
+def save_MINUS(u_ges_MINUS_write, alpha_ges_MINUS_write, dadt_ges_MINUS_write, **kwargs):
+    if "prefix" in kwargs:
+        prefix=kwargs["prefix"]
+    else:
+        prefix=""
+    np.savetxt(f"{prefix}u_ges_MINUS.csv", u_ges_MINUS_write, delimiter = ",")
+    np.savetxt(f"{prefix}alpha_ges_MINUS.csv", alpha_ges_MINUS_write, delimiter = ",")
+    np.savetxt(f"{prefix}dadt_ges_MINUS.csv", dadt_ges_MINUS_write, delimiter = ",")
     
 #Read temperature, alpha and dadt data from .csv-files    
-def read():
-    u_ges_read = np.genfromtxt("u_ges.csv", delimiter = ",")
-    alpha_ges_read = np.genfromtxt("alpha_ges.csv", delimiter = ",")
-    dadt_ges_read = np.genfromtxt("dadt_ges.csv", delimiter = ",")
+def read(**kwargs):
+    if "prefix" in kwargs:
+        prefix=kwargs["prefix"]
+    else:
+        prefix=""
+    u_ges_read = np.genfromtxt(f"{prefix}u_ges.csv", delimiter = ",")
+    alpha_ges_read = np.genfromtxt(f"{prefix}alpha_ges.csv", delimiter = ",")
+    dadt_ges_read = np.genfromtxt(f"{prefix}dadt_ges.csv", delimiter = ",")
     return u_ges_read, alpha_ges_read, dadt_ges_read
 
-def read_PLUS():
-    u_ges_PLUS_read = np.genfromtxt("u_ges_PLUS.csv", delimiter = ",")
-    alpha_ges_PLUS_read = np.genfromtxt("alpha_ges_PLUS.csv", delimiter = ",")
-    dadt_ges_PLUS_read = np.genfromtxt("dadt_ges_PLUS.csv", delimiter = ",")
+def read_PLUS(**kwargs):
+    if "prefix" in kwargs:
+        prefix=kwargs["prefix"]
+    else:
+        prefix=""
+    u_ges_PLUS_read = np.genfromtxt(f"{prefix}u_ges_PLUS.csv", delimiter = ",")
+    alpha_ges_PLUS_read = np.genfromtxt(f"{prefix}alpha_ges_PLUS.csv", delimiter = ",")
+    dadt_ges_PLUS_read = np.genfromtxt(f"{prefix}dadt_ges_PLUS.csv", delimiter = ",")
     return u_ges_PLUS_read, alpha_ges_PLUS_read, dadt_ges_PLUS_read
 
-def read_MINUS():
-    u_ges_MINUS_read = np.genfromtxt("u_ges_MINUS.csv", delimiter = ",")
-    alpha_ges_MINUS_read = np.genfromtxt("alpha_ges_MINUS.csv", delimiter = ",")
-    dadt_ges_MINUS_read = np.genfromtxt("dadt_ges_MINUS.csv", delimiter = ",")
+def read_MINUS(**kwargs):
+    if "prefix" in kwargs:
+        prefix=kwargs["prefix"]
+    else:
+        prefix=""
+    u_ges_MINUS_read = np.genfromtxt(f"{prefix}u_ges_MINUS.csv", delimiter = ",")
+    alpha_ges_MINUS_read = np.genfromtxt(f"{prefix}alpha_ges_MINUS.csv", delimiter = ",")
+    dadt_ges_MINUS_read = np.genfromtxt(f"{prefix}dadt_ges_MINUS.csv", delimiter = ",")
     return u_ges_MINUS_read, alpha_ges_MINUS_read, dadt_ges_MINUS_read
 
 #Plotfunctions:
@@ -129,9 +156,9 @@ def testPlot(canvas,ax,u_ges, nsteps, q, **kwargs):  #def testPlot(self,canvas,a
         ax.legend()
         
         lns[0].set_ydata(u_ges[:q,0]-273.15)
-        lns[1].set_ydata(u_ges[:,3]-273.15)
-        lns[2].set_ydata(u_ges[:,9]-273.15)
-        lns[3].set_ydata(u_ges[:,12]-273.15)
+        lns[1].set_ydata(u_ges[:,1]-273.15)
+        lns[2].set_ydata(u_ges[:,6]-273.15)
+        lns[3].set_ydata(u_ges[:,7]-273.15)
         
         
         #redraw plot
@@ -156,10 +183,10 @@ def testPlot(canvas,ax,u_ges, nsteps, q, **kwargs):  #def testPlot(self,canvas,a
         plt.ylabel("$T$ in °C",fontsize=18)    
         
         ln1, = plt.plot(narray[:q], u_ges[:q,0]-273.15, label = "0 mm")#, markersize = 1)
-        ln2, = plt.plot(narray, u_ges[:,3]-273.15, label = "3 mm")#, markersize = 1)
+        ln2, = plt.plot(narray, u_ges[:,1]-273.15, label = "4 mm")#, markersize = 1)
         #ln5, = plt.plot(narray, u_ges[:,6]-273.15, label = "6")#, markersize = 1)
-        ln3, = plt.plot(narray, u_ges[:,9]-273.15, label = "9 mm")#, markersize = 1)
-        ln4, = plt.plot(narray, u_ges[:,12]-273.15, label = "12 mm")#, markersize = 1)  
+        ln3, = plt.plot(narray, u_ges[:,6]-273.15, label = "33 mm")#, markersize = 1)
+        ln4, = plt.plot(narray, u_ges[:,7]-273.15, label = "37 mm")#, markersize = 1)  
         vln = plt.axvline(x=q, color='black', linestyle='--', label='now')
         print("size of uges")
         print(u_ges.size)

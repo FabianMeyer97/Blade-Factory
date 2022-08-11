@@ -3,7 +3,7 @@
 Main Window
 """
 #from tkinter import *
-from tkinter import Label, Button, Checkbutton, Tk, IntVar, Entry, Spinbox, Frame
+from tkinter import Label, Button, Checkbutton, Tk, IntVar, Entry, Spinbox, Frame, StringVar, OptionMenu
 import main_do
 import threading as th
 import time
@@ -19,6 +19,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg#, NavigationTool
 
 from matplotlib.figure import Figure
 from write import testPlot
+from datetime import datetime
 #
 
 global temperature_entered
@@ -46,9 +47,9 @@ do_continue = True
 
 def clicked():
     global temperature_entered
-    res = "Hotplate temperature: " + txtTemp.get()
+    res = "Hotplate temperature: " + HeatingTempInput.get()
     lblTemp.configure(text= res)
-    temperature_entered = float(txtTemp.get())
+    temperature_entered = float(HeatingTempInput.get())
 
 def vliesButton():
     global lblVlies
@@ -77,8 +78,8 @@ def update():
             #print(type(inpDaqCh.get()))
             temperature = Einlesen.getTemperature(10, channel=int(inpDaqCh.get()))+273.15
             temperature_entered = round(temperature)-273.15
-            txtTemp.delete(0)
-            txtTemp.insert(0, round(temperature)-273.15)
+            HeatingTempInput.delete(0)
+            HeatingTempInput.insert(0, round(temperature)-273.15)
         else:
             print("is not active")
             temperature = temperature_entered +273.15
@@ -117,12 +118,30 @@ def update():
 def startProcess():
     print("do_once()")
     global q, start, slicer, oldslice, plus, temperature_entered
+    wärmeleitung.T_out = float(EnvTempVar.get())
+    wärmeleitung.u_init = float(StartTempVar.get())
+    #wärmeleitung.u_left= float(HeatingTempVar.get()) # unnecesary, is overwritten in regelung
+    main_do.boundary1 = int(BoundaryAVar.get())
+    main_do.boundary2 = int(BoundaryBVar.get())
+    main_do.starttime_prefix = datetime.now().strftime("%Y_%m_%d_%H%M%S")
+    main_do.layer_composition = layeringVar.get()
+    main_do.h = float(ThicknessVar.get())/1000
+    main_do.ny = int(main_do.h/main_do.dy)  # quick and dirty...
+    if main_do.layer_composition in ['with balsa core', 'default']:   #, 'with foam core'
+        main_do.k_core = 0.06 #0.06-0.0935
+        main_do.density_core = 140
+        main_do.c_core = 2720
+    if main_do.layer_composition in ['with foam core']:   #, 'with foam core'
+        main_do.k_core = (0.031+0.056)/2  #0.031-0.056 #RANGE LAUT DATENBLATT
+        main_do.density_core = (40+250)/2  # 40-250 #RANGE LAUT DATENBLATT
+        main_do.c_core = 1200 #SCHÄTZWERT
+    print(f"start recording at {main_do.starttime_prefix}")
     if activeDAQ.get() == 1:
         #print("is active")
         temperature = Einlesen.getTemperature(10, channel=int(inpDaqCh.get()))+273.15
         temperature_entered = round(temperature)-273.15
-        txtTemp.delete(0)
-        txtTemp.insert(0, round(temperature)-273.15)
+        HeatingTempInput.delete(0)
+        HeatingTempInput.insert(0, round(temperature)-273.15)
     else:
         print("is not active")
         temperature = temperature_entered +273.15
@@ -142,32 +161,19 @@ lblTmax = Label(window, text="T_max:")
 lblPlus = Label(window, text="wenn + X °C:")
 lblMinus = Label(window, text="wenn - X °C:")
 lblAlpha80 = Label(window)
-#lblVlies = Label(window, text=" Vlies Platzhalter") # kein Vließ abgelegt
 
-#updateTempFrame = Frame(window, width=150, bg="blue")
-controlFrame = Frame(window, width=800)
+controlFrame = Frame(window, width=400)
+lControlFrame = Frame(window, width=400)
 
-lblTempMINUS = Label(window, text = f"MINUS: ") #hier muss noch -MINUS gegetted werden
+lblTempMINUS = Label(window, text = "MINUS: ")
 lblMaxTempMINUS = Label(window, text = "T_max")
 lblAlphaMinus = Label(window, text = "AlphaMInus")
 
-lblTempPLUS = Label(window, text = f"PLUS: ") #hier muss noch -PLUS gegetted werden
+lblTempPLUS = Label(window, text = "PLUS: ")
 lblMaxTempPLUS = Label(window, text = "MaxTemp")
 lblAlphaPLUS = Label(window, text = "AlphaPLUS")
 
-btnUpdate = Button(controlFrame, text="Update", command=clicked)
-btnStart = Button(controlFrame, text="Start", command=startProcess)
-btnEnd = Button(controlFrame, text="Stop", command=endMeasurement)
-#btnVlies = Button(window, text="Vlies", command=vliesButton)
 
-
-lblDaqCh = Label(controlFrame, text="DAQ Channel: ") # kein Vließ abgelegt
-inpDaqCh = Spinbox(controlFrame, from_=0, to=9, width=2)
-
-activeDAQ = IntVar()
-activeCover = IntVar()
-cbAutoInput = Checkbutton(controlFrame, text='DAQ Input',variable=activeDAQ, onvalue=1, offvalue=0)
-cbCover = Checkbutton(controlFrame, text='Cover',variable=activeCover, onvalue=True, offvalue=False, command=vliesButton)
 
 lblTempMINUS.grid(column=1, row=1)
 lblMaxTempMINUS.grid(column=1,row=2)
@@ -185,21 +191,95 @@ lblamin.grid(column=2, row=5)
 lblTmax.grid(column=2, row=2)
 lblPlus.grid(column=3, row=3)
 lblMinus.grid(column=1, row=3)
-cbAutoInput.pack(side="left") #.grid(column=1, row=12)
-lblDaqCh.pack(side="left") #.grid(column=2,row=13)
-inpDaqCh.pack(side="left") #grid(column=1, row=13)
 lblAlpha80.grid(column=2, row=12)
-#updateTempFrame.grid(column=3, row=12)
-controlFrame.grid( sticky='ew', row=14,columnspan=5,)
+controlFrame.grid( sticky='ew', row=14,columnspan=3,column=3)
+lControlFrame.grid( sticky='ew', row=14,columnspan=3,column=0)
+
+EnvTempFrame = Frame(controlFrame, width=100)
+EnvTempLabel = Label(EnvTempFrame, text = "Env. temp. [°C]:")
+EnvTempVar = StringVar(window, value='23.0')
+EnvTempInput = Entry(EnvTempFrame, textvariable=EnvTempVar, width=5)
+EnvTempFrame.pack()
+EnvTempLabel.pack(side="left")
+EnvTempInput.pack(side="left")
+
+StartTempFrame = Frame(controlFrame, width=100)
+StartTempLabel = Label(StartTempFrame, text = "Start temp. [°C]:")
+StartTempVar = StringVar(window, value='38.0')
+StartTempInput = Entry(StartTempFrame, textvariable=StartTempVar, width=5)
+StartTempFrame.pack()
+StartTempLabel.pack(side="left")
+StartTempInput.pack(side="left")
+
+HeatingTempFrame = Frame(controlFrame, width=100)
+HeatingTempLabel = Label(HeatingTempFrame, text = "Heating temp. [°C]:")
+HeatingTempVar   = StringVar(window, value='40.0')
+HeatingTempInput = Entry(HeatingTempFrame, textvariable=HeatingTempVar, width=5)
+HeatingTempBtn   = Button(HeatingTempFrame, text="Update", command=clicked)
+HeatingTempFrame.pack()
+HeatingTempLabel.pack(side="left")
+HeatingTempInput.pack(side="left")
+HeatingTempBtn.pack(side="left")
+
+layeringFrame = Frame(controlFrame, width=100)
+layeringLabel = Label(layeringFrame, text = "Layer:")
+layeringOptions = ['only fibre layers','with balsa core', 'with foam core']
+layeringVar = StringVar()
+layeringVar.set(layeringOptions[0])
+def layering_selected(choice):
+    choice = layeringVar.get()
+    print(choice)
+layeringMenu = OptionMenu(layeringFrame, layeringVar, *layeringOptions, command=layering_selected)
+layeringFrame.pack()
+layeringLabel.pack(side="left")
+layeringMenu.pack(side="left")
+layeringMenu.config(width=15)
+
+BoundaryAFrame = Frame(controlFrame, width=100)
+BoundaryALabel = Label(BoundaryAFrame, text = "Boundary 1 [mm]:") # must be int
+BoundaryAVar = StringVar(window, value='7')
+BoundaryAInput = Entry(BoundaryAFrame, textvariable=BoundaryAVar, width=5)
+BoundaryAFrame.pack()
+BoundaryALabel.pack(side="left")
+BoundaryAInput.pack(side="left")
+
+BoundaryBFrame = Frame(controlFrame, width=100)
+BoundaryBLabel = Label(BoundaryBFrame, text = "Boundary 2 [mm]:") #must be int
+BoundaryBVar = StringVar(window, value='40')
+BoundaryBInput = Entry(BoundaryBFrame, textvariable=BoundaryBVar, width=5)
+BoundaryBFrame.pack()
+BoundaryBLabel.pack(side="left")
+BoundaryBInput.pack(side="left")
+
+ThicknessFrame = Frame(controlFrame, width=100)
+ThicknessLabel = Label(ThicknessFrame, text = "Thickness [mm]:")
+ThicknessVar = StringVar(window, value='50') # can be float
+ThicknessInput = Entry(ThicknessFrame, textvariable=ThicknessVar, width=5)
+ThicknessFrame.pack()
+ThicknessLabel.pack(side="left")
+ThicknessInput.pack(side="left")
+
+DAQChFrame = Frame(lControlFrame, width=100)
+lblDaqCh = Label(DAQChFrame, text="DAQ Channel: ") # kein Vließ abgelegt
+inpDaqCh = Spinbox(DAQChFrame, from_=0, to=9, width=2)
+lblDaqCh.pack(side="left")
+inpDaqCh.pack(side="left")
+DAQChFrame.pack()
+
+activeDAQ = IntVar()
+activeCover = IntVar()
+cbAutoInput = Checkbutton(lControlFrame, text='DAQ Input',variable=activeDAQ, onvalue=1, offvalue=0)
+cbCover = Checkbutton(lControlFrame, text='Cover',variable=activeCover, onvalue=True, offvalue=False, command=vliesButton)
+cbAutoInput.pack() #.grid(column=1, row=12)
+cbCover.pack() #grid(column=3, row=13)
+## self.status_frame.grid(row=2, column=0, columnspan=2, sticky="ew")
+
+StartStopFrame = Frame(lControlFrame, width=100)
+btnStart = Button(StartStopFrame, text="Start", command=startProcess)
+btnEnd = Button(StartStopFrame, text="Stop", command=endMeasurement)
 btnStart.pack(side="left") ##grid(column=0, row=11)
 btnEnd.pack(side="left") #grid(column=0, row=12)
-#btnVlies.grid(column=0, row=13)
-
-txtTemp = Entry(controlFrame,width=10)
-txtTemp.pack(side="left") #.grid(column=3, row=12)
-btnUpdate.pack(side="left")#.grid(column=3, row=12)
-cbCover.pack(side="left") #grid(column=3, row=13)
-## self.status_frame.grid(row=2, column=0, columnspan=2, sticky="ew")
+StartStopFrame.pack()
 
 window.mainloop()
 
