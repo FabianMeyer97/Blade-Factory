@@ -10,3 +10,7 @@ ReadRedlab/ReadRedlab.py
 *.svg
 *.png
 *.svg
+*.ipynb
+*.xlsx
+*.bat
+tools.py

@@ -15,9 +15,13 @@ def save(u_ges_write, alpha_ges_write, dadt_ges_write, **kwargs):
         prefix=kwargs["prefix"]
     else:
         prefix=""
-    np.savetxt(f"{prefix}u_ges.csv", u_ges_write, delimiter = ",")  #f"({main_do.get_a_min():.2%}, {main_do.get_a_max():.2%})"
-    np.savetxt(f"{prefix}alpha_ges.csv", alpha_ges_write, delimiter = ",")
-    np.savetxt(f"{prefix}dadt_ges.csv", dadt_ges_write, delimiter = ",")
+    if "plus" in kwargs:
+        plus="_"+str('{0:+d}'.format(round(kwargs["plus"])))
+    else:
+        plus=""
+    np.savetxt(f"{prefix}u_ges{plus}.csv", u_ges_write, delimiter = ",")  #f"({main_do.get_a_min():.2%}, {main_do.get_a_max():.2%})"
+    np.savetxt(f"{prefix}alpha_ges{plus}.csv", alpha_ges_write, delimiter = ",")
+    np.savetxt(f"{prefix}dadt_ges{plus}.csv", dadt_ges_write, delimiter = ",")
     
 def save_PLUS(u_ges_PLUS_write, alpha_ges_PLUS_write, dadt_ges_PLUS_write, **kwargs):
     if "prefix" in kwargs:

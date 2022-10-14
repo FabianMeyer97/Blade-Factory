@@ -3,7 +3,7 @@ Main Datei
 
 """
 import numpy as np
-import wärmeleitung as w
+#import wärmeleitung as w
 import write
 import reg
 import time
@@ -34,22 +34,24 @@ boundary2 = None #int((6.5+31.5))
 nsteps1 = Sekunden =  int(10*60*60) # 10 hours
 stepsprorechnung = int(1200) # 1200 sec = 20 min
 nsteps = int(Sekunden/dt) # maximal duration for experiment ; 10 hours should be enough
+alpha_start=0.01 # degree of hardening at beginning of simulation
+phi=0.55                 # fiber volume content for gf laminates
 
 maxerlaubteTemperatur = 80+273.15 #40 +273.15
 
 plus = 20
 
 documentation = []
-np.array(documentation)
+np.array(documentation)  # nonsense, if you want to make an np.array, then: documentation=np.array(documentation)
 
 plotlines=None
 
 starttime_prefix = None
 layer_composition = None
 
-k_core = None  #0.06 #0.06-0.0935
-density_core = None  #140
-c_core = None  #2720  
+#k_core = None  #0.06 #0.06-0.0935
+#density_core = None  #140
+#c_core = None  #2720  
 
 # def update_clock():
 #     # get current time as text
@@ -61,6 +63,45 @@ c_core = None  #2720
 #def set_matplotfigure(x):
 #    global matplotfigure
 #    matplotfigure = x
+    
+
+def set_hswitch(switch):
+    #print("regswitch is "+str(reg.switchH)+" and will be set to "+str(switch))
+    reg.switchH = switch
+    
+def get_hswitch():
+    return reg.switchH
+  
+def set_T_out(T):
+    reg.T_out = float(T)
+    
+def get_T_out():
+    return reg.T_out  
+  
+def set_u_init(T):
+    reg.set_u_init(T)
+    #reg.u_init = T ################
+    
+def get_u_init():
+    return reg.get_u_init()  #################
+    
+def set_layer_composition(core):
+    reg.set_layer_composition(core) ############
+    
+def set_h_luft(T):
+    reg.h_luft_covered = float(T)
+    
+def set_alpha_start(alpha):
+    global alpha_start
+    #reg.alpha_start = float(alpha)
+    alpha_start = float(alpha)
+    
+def set_fvc(x):
+    #reg.fvc = float(x)
+    fvc = float(x)
+    
+#def get_layer_composition():
+#    return reg.get_layer_composition()  #################
     
 def set_clock():
     global str_clock
@@ -185,12 +226,17 @@ def do_once(eingegeben):
     global slicer, oldslice
     global plotlines
     global starttime_prefix, layer_composition
+    global alpha_start, phi
     #eingegeben1 = e.getTemperature(10)   
     documentation.append((0,eingegeben)) #documentation.append((0,eingegeben1))
     start = time.time()
-    u_ges, alpha_ges, dadt_ges, u, u0 = reg.regelung1(nsteps, dy, dt, dy2, ny, boundary1, boundary2, eingegeben, stepsprorechnung, prefix=f"{starttime_prefix}_", layers=layer_composition) #eingegeben1
-    u_ges_PLUS, alpha_ges_PLUS, dadt_ges_PLUS, u_PLUS, u0_PLUS = reg.regelung1_PLUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, eingegeben, stepsprorechnung, plus, prefix=f"{starttime_prefix}_", layers=layer_composition) #eingegeben1
-    u_ges_MINUS, alpha_ges_MINUS, dadt_ges_MINUS, u_MINUS, u0_MINUS = reg.regelung1_MINUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, eingegeben, stepsprorechnung, plus, prefix=f"{starttime_prefix}_", layers=layer_composition) #eingegeben1
+    #u_ges, alpha_ges, dadt_ges, u, u0 = reg.regelung1(nsteps, dy, dt, dy2, ny, boundary1, boundary2, eingegeben, stepsprorechnung, prefix=f"{starttime_prefix}_", layers=layer_composition) #eingegeben1
+    #u_ges_PLUS, alpha_ges_PLUS, dadt_ges_PLUS, u_PLUS, u0_PLUS = reg.regelung1_PLUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, eingegeben, stepsprorechnung, plus, prefix=f"{starttime_prefix}_", layers=layer_composition) #eingegeben1
+    #u_ges_MINUS, alpha_ges_MINUS, dadt_ges_MINUS, u_MINUS, u0_MINUS = reg.regelung1_MINUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, eingegeben, stepsprorechnung, plus, prefix=f"{starttime_prefix}_", layers=layer_composition) #eingegeben1
+    u_ges, alpha_ges, dadt_ges, u, u0 = reg.controlStep(nsteps, dy, dt, dy2, ny, boundary1, boundary2, None, eingegeben, None, stepsprorechnung, None, prefix=f"{starttime_prefix}_", layers=layer_composition, first=True, alpha_start=alpha_start, phi=phi) #eingegeben1
+    u_ges_PLUS, alpha_ges_PLUS, dadt_ges_PLUS, u_PLUS, u0_PLUS = reg.controlStep(nsteps, dy, dt, dy2, ny, boundary1, boundary2, None, eingegeben, None, stepsprorechnung, None, plus=plus, prefix=f"{starttime_prefix}_", layers=layer_composition, first=True, alpha_start=alpha_start, phi=phi) #eingegeben1
+    u_ges_MINUS, alpha_ges_MINUS, dadt_ges_MINUS, u_MINUS, u0_MINUS = reg.controlStep(nsteps, dy, dt, dy2, ny, boundary1, boundary2, None, eingegeben, None, stepsprorechnung, None, plus=-plus, prefix=f"{starttime_prefix}_", layers=layer_composition, first=True, alpha_start=alpha_start, phi=phi) #eingegeben1
+                                                      
     plus = (maxerlaubteTemperatur - np.amax(u_ges))/2
     if plus < 0:
         plus = 0
@@ -206,8 +252,8 @@ def do_once(eingegeben):
     
 clearConsole = lambda: os.system('cls' if os.name in ('nt', 'dos') else 'clear')
 
-def do_process(q, start, starttime, eingegeben): #, plus
-    clearConsole()
+def do_process(q, start, starttime, eingegeben): #, plus ???????????? ist das plus nicht notwendig für mainWindowTK??????????
+    #clearConsole()
     global u_ges, alpha_ges, dadt_ges, u, u0
     global u_ges_PLUS, alpha_ges_PLUS, dadt_ges_PLUS, u_PLUS, u0_PLUS 
     global u_ges_MINUS, alpha_ges_MINUS, dadt_ges_MINUS, u_MINUS, u0_MINUS
@@ -218,6 +264,7 @@ def do_process(q, start, starttime, eingegeben): #, plus
     global matplotcanvas, matplotax
     global plotlines, matplotfigure
     global starttime_prefix, layer_composition
+    global alpha_start, phi
     q += 1  
     
     
@@ -238,18 +285,33 @@ def do_process(q, start, starttime, eingegeben): #, plus
     documentation.append((slicer, eingegeben))    
     starttime = time.time()
     plus = (maxerlaubteTemperatur - np.amax(u_ges))/2 
-    if plus < 0:
-        plus = 0
+    if plus < 1: #0: # lower steps than 1 degree probably not useful
+        plus = 1 # 0
     
     #print(plus)
     
-    u_ges, alpha_ges, dadt_ges, u, u0 = reg.regelung2(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben, slicer, stepsprorechnung, oldslice, prefix=f"{starttime_prefix}_", layers=layer_composition)
+    u_ges, alpha_ges, dadt_ges, u, u0 = reg.controlStep(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben, slicer, stepsprorechnung, oldslice, 
+                                                        write=False, prefix=f"{starttime_prefix}_", layers=layer_composition, 
+                                                        u_ges=u_ges[:stepsprorechnung+oldslice], 
+                                                        alpha_ges=alpha_ges[:stepsprorechnung+oldslice], 
+                                                        dadt_ges=dadt_ges[:stepsprorechnung+oldslice],                                      
+                                                        first=False, silent=False, alpha_start=alpha_start, phi=phi)
     set_a_max()
     set_a_min()
     #set_max_alpha()
-    u_ges_PLUS, alpha_ges_PLUS, dadt_ges_PLUS, u_PLUS, u0_PLUS = reg.regelung2_PLUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben,slicer, stepsprorechnung, oldslice, plus, prefix=f"{starttime_prefix}_", layers=layer_composition)
+    u_ges_PLUS, alpha_ges_PLUS, dadt_ges_PLUS, u_PLUS,u0_PLUS = reg.controlStep(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben,slicer, stepsprorechnung, oldslice, 
+                                                                                plus=plus, write=False, prefix=f"{starttime_prefix}_", layers=layer_composition, 
+                                                                                u_ges=u_ges_PLUS[:stepsprorechnung+oldslice], 
+                                                                                alpha_ges=alpha_ges_PLUS[:stepsprorechnung+oldslice], 
+                                                                                dadt_ges=dadt_ges_PLUS[:stepsprorechnung+oldslice],                                      
+                                                                                first=False, silent=True, alpha_start=alpha_start, phi=phi)
     set_wenn_plus()
-    u_ges_MINUS, alpha_ges_MINUS, dadt_ges_MINUS, u_MINUS, u0_MINUS = reg.regelung2_MINUS(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben,slicer, stepsprorechnung, oldslice, plus, prefix=f"{starttime_prefix}_", layers=layer_composition)
+    u_ges_MINUS, alpha_ges_MINUS, dadt_ges_MINUS, u_MINUS, u0_MINUS = reg.controlStep(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben,slicer, stepsprorechnung, oldslice, 
+                                                                                plus=-plus, write=False, prefix=f"{starttime_prefix}_", layers=layer_composition,
+                                                                                u_ges=u_ges_MINUS[:stepsprorechnung+oldslice], 
+                                                                                alpha_ges=alpha_ges_MINUS[:stepsprorechnung+oldslice], 
+                                                                                dadt_ges=dadt_ges_MINUS[:stepsprorechnung+oldslice],                                      
+                                                                                first=False, silent=True, alpha_start=alpha_start, phi=phi)
     set_clock()
     set_T_max()
     set_wenn_minus()

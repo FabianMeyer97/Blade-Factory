@@ -8,7 +8,7 @@ import main_do
 import threading as th
 import time
 import Einlesen
-import wärmeleitung
+#import wärmeleitung
 
 # experimental:
 #from tkinter import ttk
@@ -53,14 +53,14 @@ def clicked():
 
 def vliesButton():
     global lblVlies
-    #wärmeleitung.switchH = not wärmeleitung.switchH
-    wärmeleitung.switchH = activeCover.get()
-    if wärmeleitung.switchH == True:    
+    #wärmeleitung.switchH = activeCover.get()
+    switchH = activeCover.get()
+    main_do.set_hswitch(switchH)
+    #if wärmeleitung.switchH == True:    
+    if main_do.get_hswitch() == True:   
         print("vließ hinlegen")
-        #lblVlies.config(text = "Vließ hingelegt")
     else:
         print("vließ wegnehmen")
-        #lblVlies.config(text = "Vließentfernt")
     
 def endMeasurement():
     global do_continue
@@ -118,8 +118,12 @@ def update():
 def startProcess():
     print("do_once()")
     global q, start, slicer, oldslice, plus, temperature_entered
-    wärmeleitung.T_out = float(EnvTempVar.get())
-    wärmeleitung.u_init = float(StartTempVar.get())
+    main_do.set_T_out(EnvTempVar.get())  #  wärmeleitung.T_out = float(EnvTempVar.get())
+    #wärmeleitung.u_init = float(StartTempVar.get())
+    main_do.set_u_init(float(StartTempVar.get()))
+    main_do.set_h_luft(float(hLuftVar.get()))
+    main_do.set_alpha_start(alpha_startVar.get())
+    main_do.set_fvc(float(fvcVar.get()))
     #wärmeleitung.u_left= float(HeatingTempVar.get()) # unnecesary, is overwritten in regelung
     main_do.boundary1 = int(BoundaryAVar.get())
     main_do.boundary2 = int(BoundaryBVar.get())
@@ -127,14 +131,16 @@ def startProcess():
     main_do.layer_composition = layeringVar.get()
     main_do.h = float(ThicknessVar.get())/1000
     main_do.ny = int(main_do.h/main_do.dy)  # quick and dirty...
-    if main_do.layer_composition in ['with balsa core', 'default']:   #, 'with foam core'
-        main_do.k_core = 0.06 #0.06-0.0935
-        main_do.density_core = 140
-        main_do.c_core = 2720
+    if main_do.layer_composition in ['with balsa core', 'default']:   #, 'with balsa core'
+        main_do.set_layer_composition('balsa')
+        #main_do.k_core = 0.06 #0.06-0.0935
+        #main_do.density_core = 140
+        #main_do.c_core = 2720
     if main_do.layer_composition in ['with foam core']:   #, 'with foam core'
-        main_do.k_core = (0.031+0.056)/2  #0.031-0.056 #RANGE LAUT DATENBLATT
-        main_do.density_core = (40+250)/2  # 40-250 #RANGE LAUT DATENBLATT
-        main_do.c_core = 1200 #SCHÄTZWERT
+        main_do.set_layer_composition('AirrexC70')
+        #main_do.k_core = (0.031+0.056)/2  #0.031-0.056 #RANGE LAUT DATENBLATT
+        #main_do.density_core = (40+250)/2  # 40-250 #RANGE LAUT DATENBLATT
+        #main_do.c_core = 1200 #SCHÄTZWERT
     print(f"start recording at {main_do.starttime_prefix}")
     if activeDAQ.get() == 1:
         #print("is active")
@@ -258,6 +264,30 @@ ThicknessInput = Entry(ThicknessFrame, textvariable=ThicknessVar, width=5)
 ThicknessFrame.pack()
 ThicknessLabel.pack(side="left")
 ThicknessInput.pack(side="left")
+
+hLuftFrame = Frame(lControlFrame, width=100)
+hLuftLabel = Label(hLuftFrame, text = "hAir:")
+hLuftVar = StringVar(window, value='3.0') # can be float
+hLuftInput = Entry(hLuftFrame, textvariable=hLuftVar, width=5)
+hLuftFrame.pack()
+hLuftLabel.pack(side="left")
+hLuftInput.pack(side="left")
+
+fvcFrame = Frame(lControlFrame, width=100)
+fvcLabel = Label(fvcFrame, text = "fiber volume content:")
+fvcVar = StringVar(window, value='0.55')
+fvcInput = Entry(fvcFrame, textvariable=fvcVar, width=5)
+fvcFrame.pack()
+fvcLabel.pack(side="left")
+fvcInput.pack(side="left")
+
+alpha_startFrame = Frame(lControlFrame, width=100)
+alpha_startLabel = Label(alpha_startFrame, text = "alphaStart:")
+alpha_startVar = StringVar(window, value='0.1') # can be float
+alpha_startInput = Entry(alpha_startFrame, textvariable=alpha_startVar, width=5)
+alpha_startFrame.pack()
+alpha_startLabel.pack(side="left")
+alpha_startInput.pack(side="left")
 
 DAQChFrame = Frame(lControlFrame, width=100)
 lblDaqCh = Label(DAQChFrame, text="DAQ Channel: ") # kein Vließ abgelegt
