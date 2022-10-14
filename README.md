@@ -11,6 +11,6 @@
 - [x] GUI erstellen
 - [ ] GUI verbessern
 - [ ] Kalibrierung für Balsaholz
-- [ ] Funktionalität für PVC-Schaum
+- [x] Funktionalität für PVC-Schaum
 - [ ] Unterstützung mehrerer Heizplatten (dazu Grundfunktionen des Programms in Klassse umsetzen?)
 - [x] Einbindung RED-ME DAQ 
