@@ -143,9 +143,17 @@ def animatePlot(u_ges, nsteps):
     return ani
 
 def testPlot(canvas,ax,u_ges, nsteps, q, **kwargs):  #def testPlot(self,canvas,ax):
+    plt.figure(canvas.number)
     #c = ['r','b','g']  # plot marker colors
     narray = np.array([i for i in range(nsteps)])
     
+    if "channel" in kwargs:
+        channel=kwargs["channel"]
+    else:
+        channel = "##"
+    
+    print("plot ch: "+str(channel))
+    print("plot nsteps: "+str(nsteps))
     if "update" in kwargs:
         lns=kwargs["update"]
 
@@ -154,23 +162,23 @@ def testPlot(canvas,ax,u_ges, nsteps, q, **kwargs):  #def testPlot(self,canvas,a
         lns[2].set_xdata(narray)
         lns[3].set_xdata(narray)
         lns[4].set_xdata(q)
-        lns[4].set_label(f"{q} sec since start")
+        lns[4].set_label(f"{q} sec since start at ch{channel}")
         #fm = plt.get_current_fig_manager()
         #fm.toolbar.actions()[0].triggered.connect(home_callback)
         ax.legend()
         
         lns[0].set_ydata(u_ges[:q,0]-273.15)
-        lns[1].set_ydata(u_ges[:,1]-273.15)
-        lns[2].set_ydata(u_ges[:,6]-273.15)
-        lns[3].set_ydata(u_ges[:,7]-273.15)
+        lns[1].set_ydata(u_ges[:,9]-273.15)
+        lns[2].set_ydata(u_ges[:,19]-273.15)
+        lns[3].set_ydata(u_ges[:,29]-273.15)
         
         
         #redraw plot
-        ax = plt.gca()
+        ax = ax #plt.gca()
         ax.relim()
         ax.autoscale_view()
          
-        figure = plt.gcf()
+        figure = canvas #plt.gcf()
         #figure.canvas.draw_idle() 
         figure.canvas.draw()
         #figure.canvas.flush_events()
@@ -187,10 +195,10 @@ def testPlot(canvas,ax,u_ges, nsteps, q, **kwargs):  #def testPlot(self,canvas,a
         plt.ylabel("$T$ in °C",fontsize=18)    
         
         ln1, = plt.plot(narray[:q], u_ges[:q,0]-273.15, label = "0 mm")#, markersize = 1)
-        ln2, = plt.plot(narray, u_ges[:,1]-273.15, label = "4 mm")#, markersize = 1)
+        ln2, = plt.plot(narray, u_ges[:,9]-273.15, label = "4 mm")#, markersize = 1)
         #ln5, = plt.plot(narray, u_ges[:,6]-273.15, label = "6")#, markersize = 1)
-        ln3, = plt.plot(narray, u_ges[:,6]-273.15, label = "33 mm")#, markersize = 1)
-        ln4, = plt.plot(narray, u_ges[:,7]-273.15, label = "37 mm")#, markersize = 1)  
+        ln3, = plt.plot(narray, u_ges[:,19]-273.15, label = "33 mm")#, markersize = 1)
+        ln4, = plt.plot(narray, u_ges[:,29]-273.15, label = "37 mm")#, markersize = 1)  
         vln = plt.axvline(x=q, color='black', linestyle='--', label='now')
         print("size of uges")
         print(u_ges.size)

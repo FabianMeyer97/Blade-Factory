@@ -160,6 +160,7 @@ def calcReaktionskinetik(ny, dt,  phi, density_M, density_schicht, u0, u, bounda
     dadt = (k1 + (k2 * alpha**s)) * (1 - alpha)**v
     
     if( (dadt*dt>1).any() ):
+        print("u0:"+str(u0))
         print("k1:"+str(k1)+" k2:"+str(k2))
         print("alpha**s:"+str(alpha**s))
         print("(1 - alpha)**v:"+str((1 - alpha)**v))

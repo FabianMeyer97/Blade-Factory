@@ -5,6 +5,7 @@ from mcculw import ul
 from mcculw.enums import ULRange
 import mcculw.ul 
 import ReadRedlab
+import numpy as np
 
 activeDAQ = ReadRedlab.rlabDAQInput(1)
 
@@ -60,33 +61,18 @@ def VoltToCelsius():
 
 
 def getTemperature(NumberOfMeasurements, **kwargs):
-    """  
-    with nidaqmx.Task() as task:
-        task.ai_channels.add_ai_voltage_chan("Dev1/ai0")
-        volt = task.read()
-        
-    voltAVG = 0
-    k = 0
-    
-    for i in range(NumberOfMeasurements):
-        volt = readTemp()
-        if volt > 0:
-            voltAVG += volt
-            k +=1       
-    voltAVG /= k 
-    
-    tempAVG = (voltAVG*10000)+20 
-    """
-    """
-    tempAVG = random.randint(40,41)
-    return tempAVG+273.15
-    """
-    channel = 1
+    channel = [0,1,2]
     if "channel" in kwargs:
-        channel=kwargs["channel"]
+        channel=[kwargs["channel"]]
     #board_num = 0
-    #channel = 0
-    value = activeDAQ.filtered_temp(n=NumberOfMeasurements, channel=channel) #ReadRedlab.filtered_temp()
+    temp = []
+    for ch in channel:
+        try:
+            value = activeDAQ.filtered_temp(n=NumberOfMeasurements, channel=ch) #ReadRedlab.filtered_temp()
+            temp.append(value)
+        except:                                                 #write nan if no TC connected
+            temp.append(np.nan)
+    
     #ai_range = mcculw.enums.ULRange.BIP5VOLTS    
     # Get a value from the device
     #value = ul.a_in(board_num, channel, ai_range)
@@ -101,10 +87,7 @@ def getTemperature(NumberOfMeasurements, **kwargs):
     # Display the error
     #   print("A UL error occurred. Code: " + str(e.errorcode)
     #    + " Message: " + e.message)
-    return value
-
-
-
+    return temp
 
 #print(getTemperature(10))
 

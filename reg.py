@@ -23,7 +23,7 @@ import warnings
 #switchH acts as a "lever"; while False, the Heattransfer coefficiant is calculated
 #if it's True the HTC is adjusted to match a "fleece" on the object
 switchH = False
-T_out = 23.0
+T_out = 18.4
 #u_init = 39  # used in wärmeleitung.py
 h_luft_covered = None #4
 alpha_start = None #0.04 #0.0000001 #0.00000001
@@ -228,6 +228,7 @@ def controlStep(nsteps, dy, dt, dy2, ny, boundary1, boundary2, q, eingegeben,sli
     else:
         plus=0
     
+    #print("eingegeben: "+str(eingegeben)+" plus: " + str(plus))
     
     print("controlstep with q="+str(q)+", first="+str(first)+"-----------------------------------")
     (u0, u, u_ges, u_left, a_balsa, aa_balsa, u0_DUMMY, u_DUMMY, u_ges_DUMMY, k1, k2,   # u_ges_DUMMY
